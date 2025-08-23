@@ -4,69 +4,69 @@
     "nombre": "Avena Tradicional 500 g",
     "precio": 2200,
     "sku": "AV-500",
-    "imagen": "activos/avena.png"
+    "imagen": "assets/avena.png"
   },
   {
     "id": "WF-PRO",
     "nombre": "Waffles Proteicos (pack)",
     "precio": 4200,
     "sku": "WF-PRO",
-    "imagen": "activos/waffles.png"
+    "imagen": "assets/waffles.png"
   },
   {
     "id": "TE-JA-100",
     "nombre": "Té de Jamaica 100 g",
     "precio": 3500,
     "sku": "TE-JA-100",
-    "imagen": "activos/te-jamaica.png"
+    "imagen": "assets/te-jamaica.png"
   },
   {
     "id": "AC-200",
     "nombre": "Aceite de Coco Neutro (Plástico) 200 cc",
     "precio": 3850,
     "sku": "AC-200",
-    "imagen": "activos/aceite-coco-plastico.png"
+    "imagen": "assets/aceite-coco-plastico.png"
   },
   {
     "id": "AC-VID-200",
     "nombre": "Aceite de Coco Neutro (Vidrio) 200 cc",
     "precio": 4300,
     "sku": "AC-VID-200",
-    "imagen": "activos/aceite-coco-vidrio.png"
+    "imagen": "assets/aceite-coco-vidrio.png"
   },
   {
     "id": "AO-500",
     "nombre": "Aceite de Oliva Extra Virgen 500 cc",
     "precio": 5100,
     "sku": "AO-500",
-    "imagen": "activos/aceite-oliva.png"
+    "imagen": "assets/aceite-oliva.png"
   },
   {
     "id": "CH-NEGRO",
     "nombre": "Chocolate Amargo sin azúcar 70%",
     "precio": 2500,
     "sku": "CH-NEGRO",
-    "imagen": "activos/chocolate-amargo.png"
+    "imagen": "assets/chocolate-amargo.png"
   },
   {
     "id": "SN-MIX",
     "nombre": "Mix de frutos secos (200 g)",
     "precio": 2800,
     "sku": "SN-MIX",
-    "imagen": "activos/mix-frutos.png"
+    "imagen": "assets/mix-frutos.png"
   },
   {
     "id": "PN-INTEG",
     "nombre": "Pan Integral Casero",
     "precio": 2600,
     "sku": "PN-INTEG",
-    "imagen": "activos/pan-integral.png"
+    "imagen": "assets/pan-integral.png"
   },
   {
     "id": "MI-ALM",
     "nombre": "Miel Pura de Abeja 500 g",
     "precio": 4500,
     "sku": "MI-ALM",
-    "imagen": "activos/miel.png"
+    "imagen": "assets/miel.png"
   }
 ]
