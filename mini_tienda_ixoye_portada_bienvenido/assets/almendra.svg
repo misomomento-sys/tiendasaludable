@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <defs>
+    <radialGradient id="g" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#F6D7A7"/>
+      <stop offset="100%" stop-color="#C89B6E"/>
+    </radialGradient>
+  </defs>
+  <!-- Almond body -->
+  <path d="M120 20 C80 40, 55 85, 60 130 C65 175, 95 210, 120 220 C145 210, 175 175, 180 130 C185 85, 160 40, 120 20 Z"
+        fill="url(#g)" stroke="#8C6A4A" stroke-width="3"/>
+  <!-- Face -->
+  <ellipse cx="120" cy="120" rx="58" ry="68" fill="rgba(255,255,255,0.08)"/>
+  <circle cx="95" cy="120" r="6" fill="#3A2F27"/>
+  <circle cx="145" cy="120" r="6" fill="#3A2F27"/>
+  <path d="M100 145 Q120 158 140 145" fill="none" stroke="#3A2F27" stroke-width="4" stroke-linecap="round"/>
+  <!-- Arms -->
+  <path d="M60 130 C40 125, 35 110, 45 100" fill="none" stroke="#8C6A4A" stroke-width="6" stroke-linecap="round"/>
+  <path d="M180 130 C200 125, 205 110, 195 100" fill="none" stroke="#8C6A4A" stroke-width="6" stroke-linecap="round"/>
+  <!-- Leaf hat -->
+  <path d="M95 48 C120 30, 160 40, 170 55 C140 60, 110 58, 95 48 Z" fill="#2E7D32" stroke="#1B5E20" stroke-width="2"/>
+</svg>
