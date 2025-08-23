@@ -50,7 +50,7 @@ body {
 .hero-img {
   width: 100%;
   min-height: 240px;
-  background: url('activos/portada-ixoye.png') center/cover no-repeat;
+  background: url('assets/portada-ixoye.png') center/cover no-repeat;
   border-radius: 12px;
   margin: 16px 0;
 }
