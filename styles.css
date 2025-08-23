@@ -168,3 +168,11 @@ body {
   border-radius: 8px;
   margin: 20px auto;
 }
+/* Portada */
+.hero-img{
+  width: 100%;
+  height: 260px;            /* podés subirla si querés */
+  background: url('/assets/portada.jpg') center/cover no-repeat;
+  border-radius: 8px;
+  margin: 20px auto;
+}
