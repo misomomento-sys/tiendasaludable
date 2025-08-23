@@ -154,3 +154,10 @@ body {
     min-height: 180px;
   }
 }
+.hero-img {
+  width: 100%;
+  height: 250px; /* ajustá según necesites */
+  background: url('assets/portada.jpg') center/cover no-repeat;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
