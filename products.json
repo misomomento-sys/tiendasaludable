@@ -21,10 +21,52 @@
     "imagen": "activos/te-jamaica.png"
   },
   {
-    "id": "MIEL-500",
-    "nombre": "Miel Pura 500 g",
-    "precio": 4800,
-    "sku": "MIEL-500",
+    "id": "AC-200",
+    "nombre": "Aceite de Coco Neutro (Plástico) 200 cc",
+    "precio": 3850,
+    "sku": "AC-200",
+    "imagen": "activos/aceite-coco-plastico.png"
+  },
+  {
+    "id": "AC-VID-200",
+    "nombre": "Aceite de Coco Neutro (Vidrio) 200 cc",
+    "precio": 4300,
+    "sku": "AC-VID-200",
+    "imagen": "activos/aceite-coco-vidrio.png"
+  },
+  {
+    "id": "AO-500",
+    "nombre": "Aceite de Oliva Extra Virgen 500 cc",
+    "precio": 5100,
+    "sku": "AO-500",
+    "imagen": "activos/aceite-oliva.png"
+  },
+  {
+    "id": "CH-NEGRO",
+    "nombre": "Chocolate Amargo sin azúcar 70%",
+    "precio": 2500,
+    "sku": "CH-NEGRO",
+    "imagen": "activos/chocolate-amargo.png"
+  },
+  {
+    "id": "SN-MIX",
+    "nombre": "Mix de frutos secos (200 g)",
+    "precio": 2800,
+    "sku": "SN-MIX",
+    "imagen": "activos/mix-frutos.png"
+  },
+  {
+    "id": "PN-INTEG",
+    "nombre": "Pan Integral Casero",
+    "precio": 2600,
+    "sku": "PN-INTEG",
+    "imagen": "activos/pan-integral.png"
+  },
+  {
+    "id": "MI-ALM",
+    "nombre": "Miel Pura de Abeja 500 g",
+    "precio": 4500,
+    "sku": "MI-ALM",
     "imagen": "activos/miel.png"
   }
 ]
