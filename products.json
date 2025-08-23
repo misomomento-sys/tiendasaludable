@@ -1,72 +1,66 @@
 [
   {
     "id": "AV-500",
-    "nombre": "Avena Tradicional 500 g",
-    "precio": 2200,
     "sku": "AV-500",
-    "imagen": "assets/avena.png"
+    "name": "Avena Tradicional 500 g",
+    "price": 2200,
+    "image": "assets/avena.jpg"
   },
   {
     "id": "WF-PRO",
-    "nombre": "Waffles Proteicos (pack)",
-    "precio": 4200,
     "sku": "WF-PRO",
-    "imagen": "assets/waffles.png"
+    "name": "Waffles Proteicos (pack)",
+    "price": 4200,
+    "image": "assets/waffles.png"
   },
   {
     "id": "TE-JA-100",
-    "nombre": "Té de Jamaica 100 g",
-    "precio": 3500,
     "sku": "TE-JA-100",
-    "imagen": "assets/te-jamaica.png"
+    "name": "Té de Jamaica 100 g",
+    "price": 3500,
+    "image": "assets/te-jamaica.jpg"
   },
   {
-    "id": "AC-200",
-    "nombre": "Aceite de Coco Neutro (Plástico) 200 cc",
-    "precio": 3850,
-    "sku": "AC-200",
-    "imagen": "assets/aceite-coco-plastico.png"
+    "id": "PAN-INT",
+    "sku": "PAN-INT",
+    "name": "Pan Integral",
+    "price": 2600,
+    "image": "assets/pan-integral.jpg"
   },
   {
-    "id": "AC-VID-200",
-    "nombre": "Aceite de Coco Neutro (Vidrio) 200 cc",
-    "precio": 4300,
-    "sku": "AC-VID-200",
-    "imagen": "assets/aceite-coco-vidrio.png"
+    "id": "MIX-FRU",
+    "sku": "MIX-FRU",
+    "name": "Mix de Frutos Secos",
+    "price": 5900,
+    "image": "assets/mix-frutos.jpg"
   },
   {
-    "id": "AO-500",
-    "nombre": "Aceite de Oliva Extra Virgen 500 cc",
-    "precio": 5100,
-    "sku": "AO-500",
-    "imagen": "assets/aceite-oliva.png"
+    "id": "MIEL-1",
+    "sku": "MIEL-1",
+    "name": "Miel Pura",
+    "price": 4800,
+    "image": "assets/miel.jpg"
   },
   {
-    "id": "CH-NEGRO",
-    "nombre": "Chocolate Amargo sin azúcar 70%",
-    "precio": 2500,
-    "sku": "CH-NEGRO",
-    "imagen": "assets/chocolate-amargo.png"
+    "id": "CHO-AM",
+    "sku": "CHO-AM",
+    "name": "Chocolate Amargo",
+    "price": 3100,
+    "image": "assets/chocolate-amargo.jpg"
   },
   {
-    "id": "SN-MIX",
-    "nombre": "Mix de frutos secos (200 g)",
-    "precio": 2800,
-    "sku": "SN-MIX",
-    "imagen": "assets/mix-frutos.png"
+    "id": "ACE-COCO",
+    "sku": "ACE-COCO",
+    "name": "Aceite de Coco (vidrio)",
+    "price": 6900,
+    "image": "assets/aceite-coco-vidrio.jpg"
   },
   {
-    "id": "PN-INTEG",
-    "nombre": "Pan Integral Casero",
-    "precio": 2600,
-    "sku": "PN-INTEG",
-    "imagen": "assets/pan-integral.png"
-  },
-  {
-    "id": "MI-ALM",
-    "nombre": "Miel Pura de Abeja 500 g",
-    "precio": 4500,
-    "sku": "MI-ALM",
-    "imagen": "assets/miel.png"
+    "id": "ACE-OLI",
+    "sku": "ACE-OLI",
+    "name": "Aceite de Oliva",
+    "price": 7200,
+    "image": "assets/aceite-oliva.jpg"
   }
 ]
+
