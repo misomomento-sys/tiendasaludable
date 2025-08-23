@@ -1,10 +1,30 @@
 [
   {
-    "id": "reemplazar-1",
-    "name": "NOMBRE DEL PRODUCTO",
-    "price": 0,
-    "sku": "SKU-000",
-    "image": "URL_DE_IMAGEN",
-    "paymentLink": ""
+    "id": "AV-500",
+    "nombre": "Avena Tradicional 500 g",
+    "precio": 2200,
+    "sku": "AV-500",
+    "imagen": "activos/avena.png"
+  },
+  {
+    "id": "WF-PRO",
+    "nombre": "Waffles Proteicos (pack)",
+    "precio": 4200,
+    "sku": "WF-PRO",
+    "imagen": "activos/waffles.png"
+  },
+  {
+    "id": "TE-JA-100",
+    "nombre": "Té de Jamaica 100 g",
+    "precio": 3500,
+    "sku": "TE-JA-100",
+    "imagen": "activos/te-jamaica.png"
+  },
+  {
+    "id": "MIEL-500",
+    "nombre": "Miel Pura 500 g",
+    "precio": 4800,
+    "sku": "MIEL-500",
+    "imagen": "activos/miel.png"
   }
 ]
