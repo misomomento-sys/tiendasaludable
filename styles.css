@@ -1,54 +1,156 @@
 
-/* ============ Reset ============ */
-*{box-sizing:border-box}
-html,body{margin:0;padding:0}
-img{max-width:100%;height:auto;display:block}
-button,input,select,textarea{font:inherit}
-
-/* ============ Base ============ */
-body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#111;line-height:1.35}
-h1,h2,h3{margin:0 0 .5rem}
-.container{max-width:980px;margin:0 auto;padding:16px}
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: Arial, sans-serif;
+  line-height: 1.5;
+  background: #fff;
+  color: #222;
+  padding-bottom: 80px;
+}
 
 /* Header */
-.header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px}
-.brand{display:flex;align-items:center;gap:10px}
-.logo{width:44px;height:44px;background:url('activos/almendra.svg') center/contain no-repeat}
-.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;background:#fff}
-
-/* Avisos/chips */
-.notice{padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap}
-.chip{border:1px solid #e5e7eb;padding:6px 10px;border-radius:999px}
-
-/* Portada */
-.hero-img{width:100%;min-height:240px;border-radius:12px;overflow:hidden}
-.hero-img img{width:100%;height:auto;display:block}
-
-/* Grid de productos */
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-.card{display:flex;flex-direction:column;gap:8px;border:1px solid #e5e7eb;border-radius:12px;padding:12px}
-.img-wrap{aspect-ratio:1/1;overflow:hidden;border-radius:10px;background:#f7f7f7}
-.img-wrap img{width:100%;height:100%;object-fit:cover}
-.price-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.qty{display:flex;align-items:center;gap:6px}
-.qty-input{width:72px;padding:6px 8px;border:1px solid #d1d5db;border-radius:8px}
-
-/* Drawer del carrito */
-.drawer{position:fixed;right:0;top:0;width:380px;max-width:100%;height:100dvh;background:#fff;border-left:1px solid #e5e7eb;transform:translateX(100%);transition:.25s;display:flex;flex-direction:column;z-index:50}
-.drawer.open{transform:translateX(0)}
-.drawer-content{display:flex;flex-direction:column;height:100%}
-.cart-items{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
-
-/* ============ Responsive ============ */
-@media (max-width:720px){
-  .header{flex-wrap:wrap;gap:8px}
-  #openCart{width:100%;order:3}
-  .brand{width:100%;justify-content:flex-start}
-  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-  .card{padding:10px}
-  .drawer{width:100%}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f5f5f5;
 }
-@media (max-width:420px){
-  .grid{grid-template-columns:1fr}
-  .qty-input{width:56px}
+.header h1 {
+  font-size: 18px;
+}
+.btn {
+  padding: 6px 12px;
+  border: 1px solid #888;
+  background: #fff;
+  cursor: pointer;
+}
+.btn-primary {
+  background: #4caf50;
+  color: #fff;
+  border: none;
+}
+.btn-outline {
+  background: transparent;
+  border: 1px solid #888;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: #0077cc;
+  cursor: pointer;
+}
+
+/* ✅ Hero (Portada) */
+.hero-img {
+  width: 100%;
+  min-height: 240px;
+  background: url('activos/portada-ixoye.png') center/cover no-repeat;
+  border-radius: 12px;
+  margin: 16px 0;
+}
+
+/* Chips */
+.notice {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+}
+.chip {
+  background: #e6f5e9;
+  border: 1px solid #4caf50;
+  border-radius: 16px;
+  padding: 4px 12px;
+  font-size: 14px;
+}
+
+/* Productos */
+.container {
+  padding: 16px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+.card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0;
+}
+.qty {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.qty-input {
+  width: 40px;
+  text-align: center;
+}
+
+/* Carrito */
+.drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 90%;
+  max-width: 380px;
+  height: 100vh;
+  background: #fff;
+  border-left: 1px solid #ddd;
+  box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+  transition: right 0.3s ease;
+  z-index: 1000;
+  padding: 16px;
+}
+.drawer.open {
+  right: 0;
+}
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.summary {
+  border-top: 1px solid #ddd;
+  margin: 16px 0;
+  padding-top: 8px;
+}
+.summary .row {
+  display: flex;
+  justify-content: space-between;
+  margin: 4px 0;
+}
+.summary .total strong {
+  font-size: 18px;
+}
+
+/* Responsivo */
+@media (max-width: 720px) {
+  .header h1 {
+    font-size: 16px;
+  }
+  .hero-img {
+    min-height: 180px;
+  }
 }
