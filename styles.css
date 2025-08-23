@@ -161,3 +161,10 @@ body {
   border-radius: 8px;
   margin-bottom: 20px;
 }
+.hero-img {
+  width: 100%;
+  height: 250px;
+  background: url('assets/portada.jpg') center/cover no-repeat;
+  border-radius: 8px;
+  margin: 20px auto;
+}
