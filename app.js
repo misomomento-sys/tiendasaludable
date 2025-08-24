@@ -129,48 +129,57 @@ function clearCart(){
 function openCart(){ el('#cartDrawer').classList.add('open'); }
 function closeCart(){ el('#cartDrawer').classList.remove('open'); }
 
-/* ===========================
+/* ================================
    Checkout WhatsApp
-=========================== */
-function checkout(){
-    if (CART.size === 0) {
-        openCart();
-        return;
+================================ */
+function checkout() {
+  if (CART.size === 0) { 
+    openCart(); 
+    return; 
+  }
+
+  const name = el('#buyerName').value.trim();
+  const phone = el('#buyerPhone').value.trim();
+  if (!name || !phone) { 
+    alert('Completá nombre y WhatsApp'); 
+    return; 
+  }
+
+  // Helper: buscar producto por SKU
+  function getProductBySku(sku) {
+    if (Array.isArray(PRODUCTS)) {
+      return PRODUCTS.find(p => p.sku === sku);
     }
+    return PRODUCTS.get ? PRODUCTS.get(sku) : PRODUCTS[sku];
+  }
 
-    const name  = el('#buyerName').value.trim();
-    const phone = el('#buyerPhone').value.trim();
+  const lines = [];
+  lines.push('*Pedido Tienda Saludable Ixoye*');
+  lines.push('');
 
-    if (!name || !phone) {
-        alert('Completá nombre y WhatsApp');
-        return;
-    }
+  CART.forEach((qty, sku) => {
+    const p = getProductBySku(sku);
+    const title = p?.name || p?.title || sku;   // fallback: muestra el SKU
+    const price = Number(p?.price) || 0;
 
-    const lines = [];
-    lines.push('*Pedido Ixoye*');
-    lines.push('');
+    lines.push(`- ${title} x${qty} = $${fmt(price * qty)}`);
+  });
 
-    CART.forEach((product, qty) => {
-        lines.push(`- ${product.title} x${qty} = $${fmt(product.price * qty)}`);
-    });
+  lines.push('');
+  lines.push(`Subtotal: ${el('#subtotal').textContent}`);
+  lines.push(`Envío: ${el('#shippingLabel').textContent}`);
+  lines.push(`Descuento: ${el('#discount').textContent}`);
+  lines.push(`*Total: ${el('#total').textContent}*`);
+  lines.push('');
+  lines.push(`👤 Nombre: ${name}`);
+  lines.push(`📱 WhatsApp: ${phone}`);
 
-    lines.push('');
-    lines.push(`Subtotal: ${el('#subtotal').textContent}`);
-    lines.push(`Envío: ${el('#shippingLabel').textContent}`);
-    lines.push(`Descuento: ${el('#discount').textContent}`);
-    lines.push(`*Total: ${el('#total').textContent}*`);
-    lines.push('');
-    lines.push(`Nombre: ${name}`);
-    lines.push(`WhatsApp: ${phone}`);
-
-    // Número fijo de la tienda (formato correcto para wa.me)
-    const storePhone = '5492235551421';
-
-    const msg = encodeURIComponent(lines.join('\n'));
-    const url = `https://wa.me/${storePhone}?text=${msg}`;
-    window.open(url, '_blank');
+  // Abrir WhatsApp de la tienda directamente
+  const msg = encodeURIComponent(lines.join('\n'));
+  const shopNumber = "5492235551421"; // número de tu tienda
+  const url = `https://wa.me/${shopNumber}?text=${msg}`;
+  window.open(url, '_blank');
 }
-
 
 /* ===========================
    Init
