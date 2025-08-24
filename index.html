@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ixoye — Mini Tienda</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ixoye — Tienda Saludable</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="header">
@@ -15,14 +15,14 @@
         <p>Mini tienda con checkout por WhatsApp</p>
       </div>
     </div>
+
     <button id="openCart" class="btn btn-outline">
       Carrito <span id="cartCount" class="badge">0</span>
     </button>
   </header>
 
-<!-- ✅ Portada como fondo -->
-<section class="hero-img"></section>
-
+  <!-- Portada -->
+  <section class="hero-img" aria-label="Portada"></section>
 
   <!-- Avisos -->
   <section class="notice">
@@ -30,26 +30,67 @@
     <div class="chip">💸 10% OFF pagando en efectivo</div>
   </section>
 
-  <!-- Grilla de productos -->
+  <!-- Grilla -->
   <main class="container">
     <div id="productGrid" class="grid"></div>
   </main>
 
-  <!-- Carrito -->
-  <div id="cartDrawer" class="drawer">
+  <!-- Cajón de carrito -->
+  <aside id="cartDrawer" class="drawer" aria-hidden="true">
     <div class="drawer-content">
       <div class="drawer-header">
         <h2>Tu carrito</h2>
-        <button id="closeCart" class="btn-link">Cerrar</button>
+        <button id="closeCart" class="btn btn-link">Cerrar</button>
       </div>
+
       <div id="cartItems" class="cart-items"></div>
 
       <div class="summary">
-        <div class="row"><span>Subtotal</span><strong id="subtotal">$0</strong></div>
-        <div class="row"><span>Envío</span><strong id="shippingLabel">—</strong></div>
-        <div class="row"><span>Descuento</span><strong id="discount">$0</strong></div>
-        <div class="row total"><span>Total</span><strong id="total">$0</strong></div>
+        <div class="row"><span>Subtotal</span> <strong id="subtotal">$0</strong></div>
+        <div class="row"><span>Envío</span> <strong id="shippingLabel">—</strong></div>
+        <div class="row"><span>Descuento</span> <strong id="discount">$0</strong></div>
+        <div class="row total"><span>Total</span> <strong id="total">$0</strong></div>
       </div>
 
-      <div class="buy
+      <div class="buyer">
+        <h3>Tus datos</h3>
+        <input id="buyerName" class="input" placeholder="Nombre y apellido *">
+        <input id="buyerPhone" class="input" placeholder="Teléfono (WhatsApp) *">
+        <input id="buyerAddress" class="input" placeholder="Dirección">
+        <input id="buyerNeighborhood" class="input" placeholder="Barrio">
+        <input id="buyerCity" class="input" placeholder="Ciudad" value="Mar del Plata">
+        <textarea id="buyerNotes" class="input" placeholder="Notas (opcional)"></textarea>
 
+        <div class="row-2">
+          <div>
+            <label class="label">Método de pago</label>
+            <select id="payMethod" class="input">
+              <option>Transferencia</option>
+              <option>Efectivo</option>
+              <option>Link de pago</option>
+            </select>
+          </div>
+          <div>
+            <label class="label">Entrega</label>
+            <div class="toggle">
+              <label><input type="radio" name="delivery" value="retiro"> Retira</label>
+              <label><input type="radio" name="delivery" value="envio" checked> Envío</label>
+            </div>
+          </div>
+        </div>
+
+        <div id="paymentLinks" class="paylinks hidden"></div>
+
+        <div class="actions">
+          <button id="checkout" class="btn btn-primary">Finalizar en WhatsApp</button>
+          <button id="clear" class="btn btn-outline">Vaciar</button>
+        </div>
+
+        <p class="small">Al finalizar, se abrirá WhatsApp con el pedido prellenado. Podés coordinar pago/entrega por chat.</p>
+      </div>
+    </div>
+  </aside>
+
+  <script src="app.js"></script>
+</body>
+</html>
