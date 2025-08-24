@@ -17,29 +17,28 @@ const SHIPPING_FEE      = 800;
 // WhatsApp de la tienda (sin espacios ni signos, con prefijo 54 y 9)
 const STORE_WA = '5492235551421';
 
-/* ===========================
-   Cargar productos (sin cache)
-=========================== */
-async function loadProducts() {
-  try {
+async function loadProducts(){
+  try{
+    // Fuerza a no usar caché (muy útil con Vercel/GitHub)
     const res = await fetch('products.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error('No se pudo cargar products.json');
+    if(!res.ok) throw new Error('No se pudo cargar products.json');
     PRODUCTS = await res.json();
-  } catch (err) {
+  }catch(err){
     console.error(err);
-    PRODUCTS = [];
+    PRODUCTS = []; // deja algo seguro
   }
 }
 
-/* ===========================
+
+/* =========================
    Render de productos
-=========================== */
-function renderProducts() {
+========================= */
+function renderProducts(){
   const grid = $('#productGrid');
-  if (!grid) return;
+  if(!grid) return;
   grid.innerHTML = '';
 
-  if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0) {
+  if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0){
     grid.innerHTML = '<p style="padding:16px">No hay productos para mostrar.</p>';
     return;
   }
@@ -47,26 +46,29 @@ function renderProducts() {
   PRODUCTS.forEach(p => {
     const card = document.createElement('div');
     card.className = 'card';
-   card.innerHTML = `
-  <div class="img-wrap">
-    <img src="assets/${p.image}" alt="${p.title}">
-  </div>
+    card.innerHTML = `
+      <div class="img-wrap">
+        <img src="assets/${p.image}" alt="${p.title}">
+      </div>
 
-  <h3 class="title">${p.title}</h3>
-  <p class="sku">SKU: ${p.sku}</p>
+      <h3 class="title">${p.title}</h3>
+      <p class="sku">SKU: ${p.sku}</p>
 
-  <div class="price-row">
-    <strong class="price">$ ${fmt(p.price)}</strong>
-    <div class="qty">
-      <button class="qty-dec" data-id="${p.id}">-</button>
-      <input class="qty-input" type="number" min="1" value="1" data-id="${p.id}">
-      <button class="qty-inc" data-id="${p.id}">+</button>
-    </div>
-  </div>
+      <div class="price-row">
+        <strong class="price">$ ${fmt(p.price)}</strong>
+        <div class="qty">
+          <button class="qty-dec" data-id="${p.id}">-</button>
+          <input class="qty-input" type="number" min="1" value="1" data-id="${p.id}">
+          <button class="qty-inc" data-id="${p.id}">+</button>
+        </div>
+      </div>
 
-  <button class="btn btn-add" data-id="${p.id}">Agregar</button>
-`;
-grid.appendChild(card);
+      <button class="btn btn-add" data-id="${p.id}">Agregar</button>
+    `;
+    grid.appendChild(card);
+  });
+}
+
 
   // Delegamos eventos de +/– y Agregar
   grid.addEventListener('click', e => {
@@ -97,33 +99,39 @@ grid.appendChild(card);
   }, { once: true }); // nos suscribimos una vez a la grilla
 }
 function attachGridEvents(){
-  const grid = document.querySelector('#productGrid');
-  if (!grid) return;
+  const grid = $('#productGrid');
+  if(!grid) return;
 
   grid.addEventListener('click', (e) => {
-    const inc = e.target.closest('.qty-inc');
-    if (inc) {
-      const input = inc.closest('.qty').querySelector('.qty-input');
-      input.value = (parseInt(input.value,10) || 1) + 1;
-      return;
-    }
-
     const dec = e.target.closest('.qty-dec');
-    if (dec) {
-      const input = dec.closest('.qty').querySelector('.qty-input');
-      input.value = Math.max(1, (parseInt(input.value,10) || 1) - 1);
+    const inc = e.target.closest('.qty-inc');
+    const add = e.target.closest('.btn-add');
+
+    if(dec){
+      const input = dec.parentElement.querySelector('.qty-input');
+      const value = Math.max(1, parseInt(input.value || '1', 10) - 1);
+      input.value = value;
       return;
     }
 
-    const add = e.target.closest('.btn-add');
-    if (add) {
-      const card = add.closest('.card');
-      const input = card.querySelector('.qty-input');
-      const qty = Math.max(1, parseInt(input.value,10) || 1);
-      addToCart(add.dataset.id, qty); // usa tu función de carrito
-      // openCart(); // si NO querés que se abra, dejalo comentado
+    if(inc){
+      const input = inc.parentElement.querySelector('.qty-input');
+      const value = Math.max(1, parseInt(input.value || '1', 10) + 1);
+      input.value = value;
+      return;
+    }
+
+    if(add){
+      const id = add.dataset.id;
+      const input = add.parentElement.querySelector('.qty-input');
+      const qty = Math.max(1, parseInt(input?.value || '1', 10));
+      addToCart(id, qty);   // usa tu función existente
+      updateCart();         // idem
+      // openCart();        // si querés que se abra el carrito automático
     }
   });
+}
+
 }
 
 /* ===========================
@@ -297,15 +305,22 @@ window.addEventListener('DOMContentLoaded', async () => {
   attachGridEvents();
   updateCart();
 
-  // 3) Listeners globales
-  $('#checkout')?.addEventListener('click', checkout);
-  $('#clearCart')?.addEventListener('click', clearCart);
-  $('#openCart')?.addEventListener('click', openCart);
-  $('#closeCart')?.addEventListener('click', closeCart);
+ /* =========================
+   Listeners y arranque
+========================= */
+window.addEventListener('DOMContentLoaded', async () => {
+  // 1) Cargar productos antes de renderizar
+  if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0){
+    await loadProducts();
+  }
 
-  // Recalcular si cambia entrega o método de pago (si lo usás)
-  $$('input[name="delivery"]').forEach(r =>
-    r.addEventListener('change', updateCart)
-  );
-  $('#payMethod')?.addEventListener('change', updateCart);
+  // 2) Render y totales
+  renderProducts();
+
+  // 3) Enganchar eventos de la grilla (¡solo una vez!)
+  attachGridEvents();
+
+  updateCart();
+
+  // (el resto de listeners globales de tu app siguen como estaban)
 });
