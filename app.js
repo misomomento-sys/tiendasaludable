@@ -119,7 +119,7 @@ function closeCart(){ $('#cartDrawer')?.classList.remove('open'); }
 
 
 /* ================================
-   Render de productos
+   Render de productos (con eventos)
 ================================ */
 function renderProducts () {
   const grid = $('#productGrid');
@@ -156,9 +156,32 @@ function renderProducts () {
         Agregar
       </button>
     `;
+
+    // 🔗 Conectar eventos de esta tarjeta
+    const qtyInput = card.querySelector('.qty-input');
+    const btnInc   = card.querySelector('.qty-inc');
+    const btnDec   = card.querySelector('.qty-dec');
+    const btnAdd   = card.querySelector('.btn-add');
+
+    btnInc.addEventListener('click', () => {
+      qtyInput.value = Number(qtyInput.value || 1) + 1;
+    });
+
+    btnDec.addEventListener('click', () => {
+      qtyInput.value = Math.max(1, Number(qtyInput.value || 1) - 1);
+    });
+
+    btnAdd.addEventListener('click', () => {
+      const qty = Number(qtyInput.value || 1);
+      addToCart(p.id, qty);     // <- ya actualiza totales adentro
+      // Si querés que NO se abra el cajón, no llames openCart() acá.
+      // openCart();  // déjalo comentado si no querés bloquear la vista
+    });
+
     grid.appendChild(card);
   });
 }
+
 
 /* ================================
    Eventos de la grilla (delegación)
@@ -371,22 +394,29 @@ function checkout(){
 /* ================================
    Listeners y arranque
 ================================ */
-
 window.addEventListener('DOMContentLoaded', async () => {
   // 1) Cargar productos antes de renderizar
   if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0) {
     await loadProducts();
   }
 
-  // 2) Render y eventos de la grilla
-  renderProducts();
-  attachGridEvents();   // <-- importante
-
-  // 3) Totales del carrito
+  // 2) Render y totales
+  renderProducts();   // ← esto ya pinta las tarjetas y les conecta los botones
   updateCart();
 
-  // (de acá para abajo tus listeners globales existentes)
+  // 3) Listeners globales (dejanos estos)
+  $('#checkout')?.addEventListener('click', checkout);
+  $('#clearCart')?.addEventListener('click', clearCart);
+  $('#openCart')?.addEventListener('click', openCart);
+  $('#closeCart')?.addEventListener('click', closeCart);
+
+  // Recalcular si cambia entrega o método de pago
+  $$('input[name="delivery"]').forEach(r =>
+    r.addEventListener('change', updateCart)
+  );
+  $('#payMethod')?.addEventListener('change', updateCart);
 });
+
 /* =========================================
    Listeners delegados para la grilla
 ========================================= */
