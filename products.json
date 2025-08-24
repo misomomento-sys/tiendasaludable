@@ -1,3 +1,21 @@
+// Carga de productos desde products.json
+async function loadProducts() {
+  try {
+    const res = await fetch('products.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    const data = await res.json();
+    if (Array.isArray(data)) {
+      PRODUCTS = data;
+    } else {
+      console.warn('products.json no es un array. Recibido:', data);
+      PRODUCTS = [];
+    }
+  } catch (err) {
+    console.error('No se pudieron cargar los productos:', err);
+    PRODUCTS = [];
+  }
+}
 [
   {
     "id": "AV-500",
