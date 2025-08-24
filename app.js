@@ -1,326 +1,318 @@
-/* ===========================
-   Helpers y estado global
-=========================== */
+/* ================================
+   Helpers + estado global
+================================ */
+
 const $  = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-const fmt = n =>
-  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+const fmt = n => new Intl.NumberFormat('es-AR', {
+  style: 'currency',
+  currency: 'ARS',
+  maximumFractionDigits: 0
+}).format(n);
 
 let PRODUCTS = [];
-const CART   = new Map(); // id -> qty
+const CART = new Map(); // id -> qty
 
-// Envío
+// Envíos
 const FREE_SHIPPING_MIN = 5000;
 const SHIPPING_FEE      = 800;
 
-// WhatsApp de la tienda (sin espacios ni signos, con prefijo 54 y 9)
+// WhatsApp de la tienda (sin espacios ni signos, con prefijo 549)
 const STORE_WA = '5492235551421';
 
+
+/* ================================
+   Carga de productos
+================================ */
+
 async function loadProducts(){
-  try{
-    // Fuerza a no usar caché (muy útil con Vercel/GitHub)
-    const res = await fetch('products.json', { cache: 'no-store' });
-    if(!res.ok) throw new Error('No se pudo cargar products.json');
-    PRODUCTS = await res.json();
-  }catch(err){
-    console.error(err);
-    PRODUCTS = []; // deja algo seguro
+  try {
+    const res = await fetch('./products.json?v=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    if (!Array.isArray(data)) throw new Error('El JSON raíz no es un array');
+    PRODUCTS = data;
+  } catch (err) {
+    console.error('❌ No se pudo cargar products.json:', err);
+    PRODUCTS = [];
   }
 }
 
 
-/* =========================
+/* ================================
+   Carrito - helpers
+================================ */
+
+function addToCart(id, qty = 1){
+  const current = CART.get(id) || 0;
+  CART.set(id, Math.max(1, current + qty));
+  updateCart(); // no abre el cajón; sólo actualiza totales
+}
+
+function setQty(id, qty){
+  qty = Number(qty);
+  if (!qty || qty < 1) {
+    CART.delete(id);
+  } else {
+    CART.set(id, qty);
+  }
+  updateCart();
+}
+
+function removeFromCart(id){
+  CART.delete(id);
+  updateCart();
+}
+
+function clearCart(){
+  CART.clear();
+  updateCart();
+}
+
+function openCart(){ $('#cartDrawer')?.classList.add('open'); }
+function closeCart(){ $('#cartDrawer')?.classList.remove('open'); }
+
+
+/* ================================
    Render de productos
-========================= */
+================================ */
+
+function resolveImagePath(filename){
+  if (!filename) return '';
+  // si ya viene con http/https o assets/ lo dejo
+  if (/^https?:\/\//i.test(filename) || filename.startsWith('assets/')) return filename;
+  // si viene sólo el nombre, prefijo assets/
+  return `assets/${filename}`;
+}
+
 function renderProducts(){
   const grid = $('#productGrid');
-  if(!grid) return;
+  if (!grid) return;
+
   grid.innerHTML = '';
 
   if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0){
-    grid.innerHTML = '<p style="padding:16px">No hay productos para mostrar.</p>';
+    grid.innerHTML = `<p style="padding:16px">No hay productos para mostrar.</p>`;
     return;
   }
 
   PRODUCTS.forEach(p => {
     const card = document.createElement('div');
     card.className = 'card';
+    // guardo el id para los botones
+    card.dataset.id = p.id;
+
+    const imgSrc = resolveImagePath(p.image);
+
     card.innerHTML = `
       <div class="img-wrap">
-        <img src="assets/${p.image}" alt="${p.title}">
+        <img src="${imgSrc}" alt="${p.title}">
       </div>
-
       <h3 class="title">${p.title}</h3>
       <p class="sku">SKU: ${p.sku}</p>
 
       <div class="price-row">
-        <strong class="price">$ ${fmt(p.price)}</strong>
+        <strong class="price">${fmt(p.price)}</strong>
         <div class="qty">
-          <button class="qty-dec" data-id="${p.id}">-</button>
-          <input class="qty-input" type="number" min="1" value="1" data-id="${p.id}">
-          <button class="qty-inc" data-id="${p.id}">+</button>
+          <button class="qty-dec" aria-label="Menos">−</button>
+          <input class="qty-input" type="number" min="1" value="1">
+          <button class="qty-inc" aria-label="Más">+</button>
         </div>
       </div>
 
-      <button class="btn btn-add" data-id="${p.id}">Agregar</button>
+      <button class="btn btn-add">Agregar</button>
     `;
+
     grid.appendChild(card);
   });
 }
 
 
-  // Delegamos eventos de +/– y Agregar
-  grid.addEventListener('click', e => {
-    const btn = e.target;
+/* ================================
+   Event delegation en la grilla
+================================ */
 
-    // Cantidad +
-    if (btn.classList.contains('qty-inc')) {
-      const input = btn.closest('.price-row').querySelector('.qty-input');
-      input.value = Math.max(1, (parseInt(input.value, 10) || 1) + 1);
-      return;
+function attachGridEvents(){
+  const grid = $('#productGrid');
+  if (!grid) return;
+
+  grid.addEventListener('click', (e) => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const id = card.dataset.id;
+    if (!id) return;
+
+    // + / -
+    if (e.target.classList.contains('qty-inc')) {
+      const input = card.querySelector('.qty-input');
+      input.value = Number(input.value || 1) + 1;
     }
-
-    // Cantidad –
-    if (btn.classList.contains('qty-dec')) {
-      const input = btn.closest('.price-row').querySelector('.qty-input');
-      input.value = Math.max(1, (parseInt(input.value, 10) || 1) - 1);
-      return;
+    if (e.target.classList.contains('qty-dec')) {
+      const input = card.querySelector('.qty-input');
+      const next = Math.max(1, Number(input.value || 1) - 1);
+      input.value = next;
     }
 
     // Agregar
-    if (btn.classList.contains('btn-add')) {
-      const id = btn.getAttribute('data-id');
-      const input = btn.closest('.card').querySelector('.qty-input');
-      const qty = Math.max(1, parseInt(input.value, 10) || 1);
-      addToCart(id, qty);   // ← NO abre el carrito
-      updateCart();
-    }
-  }, { once: true }); // nos suscribimos una vez a la grilla
-}
-function attachGridEvents(){
-  const grid = $('#productGrid');
-  if(!grid) return;
-
-  grid.addEventListener('click', (e) => {
-    const dec = e.target.closest('.qty-dec');
-    const inc = e.target.closest('.qty-inc');
-    const add = e.target.closest('.btn-add');
-
-    if(dec){
-      const input = dec.parentElement.querySelector('.qty-input');
-      const value = Math.max(1, parseInt(input.value || '1', 10) - 1);
-      input.value = value;
-      return;
-    }
-
-    if(inc){
-      const input = inc.parentElement.querySelector('.qty-input');
-      const value = Math.max(1, parseInt(input.value || '1', 10) + 1);
-      input.value = value;
-      return;
-    }
-
-    if(add){
-      const id = add.dataset.id;
-      const input = add.parentElement.querySelector('.qty-input');
-      const qty = Math.max(1, parseInt(input?.value || '1', 10));
-      addToCart(id, qty);   // usa tu función existente
-      updateCart();         // idem
-      // openCart();        // si querés que se abra el carrito automático
+    if (e.target.classList.contains('btn-add')) {
+      const input = card.querySelector('.qty-input');
+      const qty = Number(input.value || 1);
+      addToCart(id, qty);
+      // no abrimos el cajón para no “bloquear” la compra continua
+      // openCart(); // <- si alguna vez querés que se abra, descomentá
     }
   });
 }
 
-}
 
-/* ===========================
-   Carrito
-=========================== */
-function addToCart(prodId, qty = 1) {
-  const current = CART.get(prodId) || 0;
-  CART.set(prodId, current + qty);
-}
-function removeFromCart(prodId) {
-  CART.delete(prodId);
-}
-function setQty(prodId, qty) {
-  if (qty <= 0) {
-    CART.delete(prodId);
-  } else {
-    CART.set(prodId, qty);
-  }
-}
+/* ================================
+   Totales carrito
+================================ */
 
-function cartItemsList() {
-  // Convierte CART (Map) a array con info de productos
-  return [...CART.entries()].map(([id, qty]) => {
-    const product = PRODUCTS.find(p => String(p.id) === String(id));
-    if (!product) return null;
-    return { product, qty };
-  }).filter(Boolean);
-}
+function updateCart(){
+  // items
+  const itemsWrap = $('#cartItems');
+  if (itemsWrap) {
+    itemsWrap.innerHTML = '';
+    let html = '';
 
-function calcTotals() {
-  const items = cartItemsList();
-  const subtotal = items.reduce((acc, { product, qty }) => acc + product.price * qty, 0);
-  const shipping = subtotal >= FREE_SHIPPING_MIN || subtotal === 0 ? 0 : SHIPPING_FEE;
-  const discount = 0; // si en el futuro querés aplicar descuentos, cámbialo acá
-  const total = Math.max(0, subtotal + shipping - discount);
-  const shippingLabel = shipping === 0 ? 'Envío gratis' : fmt(shipping);
-  return { items, subtotal, shipping, discount, total, shippingLabel };
-}
-
-function updateCart() {
-  const { items, subtotal, shipping, discount, total, shippingLabel } = calcTotals();
-
-  // Badge del carrito
-  const totalUnits = items.reduce((acc, it) => acc + it.qty, 0);
-  const badge = $('#cartCount');
-  if (badge) badge.textContent = totalUnits;
-
-  // Totales en el cajón
-  $('#subtotal')?.replaceChildren(document.createTextNode(fmt(subtotal)));
-  $('#shippingLabel')?.replaceChildren(document.createTextNode(shippingLabel));
-  $('#discount')?.replaceChildren(document.createTextNode(fmt(discount)));
-  $('#total')?.replaceChildren(document.createTextNode(fmt(total)));
-
-  // Lista de items en el cajón
-  const list = $('#cartItems');
-  if (list) {
-    if (items.length === 0) {
-      list.innerHTML = '<p style="padding:12px 0">Todavía no agregaste productos.</p>';
-    } else {
-      list.innerHTML = items.map(({ product, qty }) => `
-        <div class="cart-row" data-id="${product.id}" style="display:flex;justify-content:space-between;align-items:center;margin:8px 0;">
-          <div>
-            <div style="font-weight:600">${product.title}</div>
-            <div style="font-size:12px;color:#666">SKU: ${product.sku}</div>
+    CART.forEach((qty, id) => {
+      const p = PRODUCTS.find(x => x.id === id);
+      if (!p) return;
+      html += `
+        <div class="cart-item" data-id="${id}">
+          <div class="title">${p.title}</div>
+          <div class="qty">
+            <button class="qty-dec">−</button>
+            <input class="qty-input" type="number" min="1" value="${qty}">
+            <button class="qty-inc">+</button>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <button class="c-dec" type="button">-</button>
-            <input class="c-qty" type="number" min="1" value="${qty}" style="width:48px;text-align:center;">
-            <button class="c-inc" type="button">+</button>
-            <button class="c-del btn-link" type="button" title="Quitar">Quitar</button>
-          </div>
+          <div class="line">${fmt(p.price * qty)}</div>
+          <button class="btn btn-outline btn-remove">Quitar</button>
         </div>
-      `).join('');
-    }
+      `;
+    });
 
-    // Delegación de eventos del cajón
-    list.onclick = e => {
-      const row = e.target.closest('.cart-row');
+    itemsWrap.innerHTML = html || '<p>Todavía no agregaste productos.</p>';
+
+    // listeners dentro del cajón (delegation simple)
+    itemsWrap.addEventListener('click', (e) => {
+      const row = e.target.closest('.cart-item');
       if (!row) return;
-      const id = row.getAttribute('data-id');
+      const id = row.dataset.id;
 
-      if (e.target.classList.contains('c-inc')) {
-        const input = row.querySelector('.c-qty');
-        const v = Math.max(1, (parseInt(input.value, 10) || 1) + 1);
-        input.value = v;
-        setQty(id, v);
-        updateCart();
+      if (e.target.classList.contains('qty-inc')) {
+        const input = row.querySelector('.qty-input');
+        input.value = Number(input.value || 1) + 1;
+        setQty(id, input.value);
       }
-      if (e.target.classList.contains('c-dec')) {
-        const input = row.querySelector('.c-qty');
-        const v = Math.max(1, (parseInt(input.value, 10) || 1) - 1);
-        input.value = v;
-        setQty(id, v);
-        updateCart();
+      if (e.target.classList.contains('qty-dec')) {
+        const input = row.querySelector('.qty-input');
+        const next = Math.max(1, Number(input.value || 1) - 1);
+        input.value = next;
+        setQty(id, input.value);
       }
-      if (e.target.classList.contains('c-del')) {
+      if (e.target.classList.contains('btn-remove')) {
         removeFromCart(id);
-        updateCart();
       }
-      if (e.target.classList.contains('c-qty')) {
-        // Nada: el change se maneja abajo
-      }
-    };
-    list.onchange = e => {
-      const row = e.target.closest('.cart-row');
+    });
+
+    // cambios manuales en qty
+    itemsWrap.addEventListener('change', (e) => {
+      const row = e.target.closest('.cart-item');
       if (!row) return;
-      if (!e.target.classList.contains('c-qty')) return;
-      const id = row.getAttribute('data-id');
-      const v = Math.max(1, parseInt(e.target.value, 10) || 1);
-      setQty(id, v);
-      updateCart();
-    };
+      if (e.target.classList.contains('qty-input')) {
+        const id = row.dataset.id;
+        setQty(id, e.target.value);
+      }
+    });
   }
+
+  // totales
+  let subtotal = 0;
+  CART.forEach((qty, id) => {
+    const p = PRODUCTS.find(x => x.id === id);
+    if (p) subtotal += p.price * qty;
+  });
+
+  const delivery = document.querySelector('input[name="delivery"]:checked')?.value || 'envio';
+  const shipping = (delivery === 'envio' && subtotal > 0 && subtotal < FREE_SHIPPING_MIN) ? SHIPPING_FEE : 0;
+  const discount = 0; // si luego quieres aplicar algún descuento, acá
+
+  const total = subtotal + shipping - discount;
+
+  $('#subtotal')?.(el => el.textContent = fmt(subtotal)) ?? null;
+  $('#shippingLabel')?.(el => el.textContent = shipping ? fmt(shipping) : '—') ?? null;
+  $('#discount')?.(el => el.textContent = fmt(discount)) ?? null;
+  $('#total')?.(el => el.textContent = fmt(total)) ?? null;
+
+  // badge del header
+  const totalQty = Array.from(CART.values()).reduce((a,b) => a + b, 0);
+  const badge = $('#cartCount');
+  if (badge) badge.textContent = totalQty;
 }
 
-/* ===========================
-   Abrir/cerrar cajón
-=========================== */
-function clearCart(){ CART.clear(); updateCart(); }
-function openCart(){ $('#cartDrawer')?.classList.add('open'); }
-function closeCart(){ $('#cartDrawer')?.classList.remove('open'); }
 
-/* ===========================
+/* ================================
    Checkout por WhatsApp
-=========================== */
-function checkout() {
-  if (CART.size === 0) { openCart(); return; }
+================================ */
 
-  const name  = $('#buyerName')?.value.trim();
-  const phone = $('#buyerPhone')?.value.trim();
-  if (!name || !phone) {
+function checkout(){
+  if (CART.size === 0){ openCart(); return; }
+
+  const name  = $('#buyerName')?.value.trim() || '';
+  const phone = $('#buyerPhone')?.value.trim() || '';
+
+  if (!name || !phone){
     alert('Completá nombre y WhatsApp');
     return;
   }
 
-  const { items, subtotal, shipping, discount, total, shippingLabel } = calcTotals();
-
   const lines = [];
-  lines.push('*Pedido Ixoye*');
-  lines.push('');
+  lines.push('*Pedido Ixoye*', '');
 
-  items.forEach(({ product, qty }) => {
-    lines.push(`• ${product.title} x${qty} = ${fmt(product.price * qty)}`);
+  CART.forEach((qty, id) => {
+    const p = PRODUCTS.find(x => x.id === id);
+    if (!p) return;
+    lines.push(`• ${p.title} x${qty} = ${fmt(p.price * qty)}`);
   });
 
   lines.push('');
-  lines.push(`Subtotal: ${fmt(subtotal)}`);
-  lines.push(`Envío: ${shippingLabel}`);
-  if (discount > 0) lines.push(`Descuento: -${fmt(discount)}`);
-  lines.push(`*Total: ${fmt(total)}*`);
+  lines.push(`Subtotal: ${$('#subtotal')?.textContent || ''}`);
+  lines.push(`Envío: ${$('#shippingLabel')?.textContent || ''}`);
+  lines.push(`Total: ${$('#total')?.textContent || ''}`);
   lines.push('');
   lines.push(`Nombre: ${name}`);
   lines.push(`WhatsApp: ${phone}`);
 
-  // Envío por WhatsApp a la TIENDA
-  const url = `https://wa.me/${STORE_WA}?text=${encodeURIComponent(lines.join('\n'))}`;
+  const msg = encodeURIComponent(lines.join('\n'));
+  const url = `https://wa.me/${STORE_WA}?text=${msg}`;
+
   window.open(url, '_blank');
 }
 
-/* ===========================
-   Listeners y arranque
-=========================== */
-window.addEventListener('DOMContentLoaded', async () => {
-  // 1) Cargar productos antes de renderizar
-  if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0) {
-    await loadProducts();
-  }
 
-  // 2) Render y totales
+/* ================================
+   Listeners y arranque
+================================ */
+
+window.addEventListener('DOMContentLoaded', async () => {
+  // 1) cargar productos primero
+  await loadProducts();
+
+  // 2) render, eventos de grilla y totales
   renderProducts();
   attachGridEvents();
   updateCart();
 
- /* =========================
-   Listeners y arranque
-========================= */
-window.addEventListener('DOMContentLoaded', async () => {
-  // 1) Cargar productos antes de renderizar
-  if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0){
-    await loadProducts();
-  }
+  // 3) listeners globales del carrito
+  $('#checkout')?.addEventListener('click', checkout);
+  $('#clearCart')?.addEventListener('click', clearCart);
+  $('#openCart')?.addEventListener('click', openCart);
+  $('#closeCart')?.addEventListener('click', closeCart);
 
-  // 2) Render y totales
-  renderProducts();
-
-  // 3) Enganchar eventos de la grilla (¡solo una vez!)
-  attachGridEvents();
-
-  updateCart();
-
-  // (el resto de listeners globales de tu app siguen como estaban)
+  // recalcular totales si cambia entrega o pago
+  $$('input[name="delivery"]').forEach(r => r.addEventListener('change', updateCart));
+  $('#payMethod')?.addEventListener('change', updateCart);
 });
