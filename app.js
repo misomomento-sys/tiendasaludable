@@ -150,9 +150,20 @@ function updateCart() {
 /* ===========================
    Abrir/cerrar
 =========================== */
-function clearCart(){ CART.clear(); updateCart(); }
-function openCart(){ $('#cartDrawer').classList.add('open'); }
-function closeCart(){ $('#cartDrawer').classList.remove('open'); }
+function clearCart(){ 
+  CART.clear(); 
+  updateCart(); 
+}
+
+function openCart(){ 
+  $('#cartDrawer').classList.add('open'); 
+  document.body.classList.add('no-scroll');   // 👈 evita que el fondo scrollee
+}
+
+function closeCart(){ 
+  $('#cartDrawer').classList.remove('open'); 
+  document.body.classList.remove('no-scroll'); // 👈 vuelve a habilitar scroll
+}
 
 /* ===========================
    Checkout a WhatsApp fijo
