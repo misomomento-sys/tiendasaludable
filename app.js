@@ -78,7 +78,7 @@ function attachGridEvents(){
   const grid = $('#productGrid');
   if (!grid) return;
 
-  // evitamos duplicar listeners si alguien llama de nuevo
+  // Evitar duplicar listeners
   if (grid.dataset.listeners === '1') return;
   grid.dataset.listeners = '1';
 
@@ -92,15 +92,36 @@ function attachGridEvents(){
     const input = card.querySelector('.qty-input');
     let qty     = Number(input?.value || 1);
 
-    // +/-
-    if (btn.classList.contains('qty-inc')) {
-      input.value = ++qty;
+    // + / -
+    if (btn.classList.contains('qty-inc')) { input.value = ++qty; return; }
+    if (btn.classList.contains('qty-dec')) { input.value = Math.max(1, qty - 1); return; }
+
+    // ---- Agregar (más tolerante) ----
+    // Considera .btn-add, o cualquier botón con data-id y clase .btn (ej. .btn-primary)
+    const isAdd =
+      btn.classList.contains('btn-add') ||
+      (btn.matches('.btn, .btn-primary, .btn-outline') && btn.dataset.id);
+
+    if (isAdd) {
+      const id   = btn.dataset.id || card.dataset.id;  // fallback por las dudas
+      const toAdd = Number(input?.value || 1);
+      if (!id) {
+        console.warn('Botón Agregar sin data-id ni card.dataset.id');
+        return;
+      }
+      addToCart(id, toAdd);   // no abre el cajón
       return;
     }
-    if (btn.classList.contains('qty-dec')) {
-      input.value = Math.max(1, qty - 1);
-      return;
-    }
+  });
+
+  // Saneo del input manual
+  grid.addEventListener('change', (ev) => {
+    if (!ev.target.classList.contains('qty-input')) return;
+    const v = Math.max(1, Number(ev.target.value || 1));
+    ev.target.value = v;
+  });
+}
+
 
     // Agregar
     if (btn.classList.contains('btn-add')) {
