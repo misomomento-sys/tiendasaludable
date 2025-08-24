@@ -1,99 +1,71 @@
-/* ===========================
-   Helpers y estado
+ /* ===========================
+   Helpers
 =========================== */
-let PRODUCTS = [];
-const CART = new Map(); // clave: sku o id -> { product, qty }
+const $  = (sel, ctx=document) => ctx.querySelector(sel);
+const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
+const fmt = n => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n ?? 0);
 
-const $ = (sel, ctx=document) => ctx.querySelector(sel);
-const fmt = n => `$ ${Number(n||0).toLocaleString('es-AR')}`;
+/* Config tienda */
+const STORE_WAPP = '5492235551421';      // WhatsApp destino
+const SHIP_THRESHOLD = 5000;             // Envío gratis desde
+const SHIP_COST = 800;                   // Envío estándar
 
-/* ===========================
-   Carga de productos
-=========================== */
-async function loadProducts() {
-  const url = '/products.json?v=' + Date.now(); // anti-cache
-  const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error('No pude leer products.json');
-  const items = await res.json();
-
-  // Normalización mínima por si hay name/title, image con/ sin assets/
-  PRODUCTS = (items || []).map(p => {
-    const title = p.name ?? p.title ?? 'Producto';
-    let image  = p.image ?? '';
-    if (image && !image.startsWith('assets/')) image = 'assets/' + image;
-    return {
-      id:  p.id ?? p.sku ?? title,
-      sku: p.sku ?? p.id ?? title,
-      title,
-      price: Number(p.price) || 0,
-      image
-    };
-  });
-}
+/* Estado */
+const PRODUCTS = (window.PRODUCTS || []);
+const CART = new Map();
 
 /* ===========================
    Render de productos
 =========================== */
-function renderProducts() {
+function renderProducts(){
   const grid = $('#productGrid');
-  if (!grid) return;
+  if(!grid) return;
+
   grid.innerHTML = '';
 
-  if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0) {
-    grid.innerHTML = `<p style="padding:16px">No hay productos para mostrar.</p>`;
+  if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0){
+    grid.innerHTML = '<p style="padding:16px">No hay productos para mostrar.</p>';
     return;
   }
 
- PRODUCTS.forEach(p => {
-  const card = document.createElement('div');
-  card.className = 'card';
-  card.innerHTML = `
-    <div class="img-wrap">
-      <img src="${p.image}" alt="${p.title}">
-    </div>
-    <h3>${p.title}</h3>
-    <p>SKU: ${p.sku}</p>
-    <p class="price">$ ${fmt(p.price)}</p>
-    <div class="qty">
-      <button onclick="setQty('${p.sku}', -1)">-</button>
-      <input id="qty-${p.sku}" type="number" value="1" min="1">
-      <button onclick="setQty('${p.sku}', 1)">+</button>
-    </div>
-    <button class="btn btn-primary btn-add">Agregar</button>
-  `;
-
-  // ✅ CAMBIO ACÁ
-  $('.btn-add', card).onclick = () => {
-    addToCart(p.sku, +$('#qty-' + p.sku).value || 1);
-    flashAdded(p.title);   // aviso rápido
-    // openCart();  ❌ eliminado para que no bloquee
-  };
-
-  grid.appendChild(card);
-});
+  PRODUCTS.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="img-wrap">
+        <img src="${p.image}" alt="${p.title}">
+      </div>
 
       <h3 class="title">${p.title}</h3>
-      <p class="sku">SKU: ${p.sku}</p>
+      <p class="sku">SKU: <strong>${p.sku}</strong></p>
 
       <div class="price-row">
         <strong class="price">${fmt(p.price)}</strong>
         <div class="qty">
-          <button class="btn qty-dec">−</button>
-          <input class="qty-input" type="number" min="1" value="1">
-          <button class="btn qty-inc">+</button>
+          <button class="qty-dec">-</button>
+          <input id="qty-${p.sku}" class="qty-input" type="number" min="1" value="1">
+          <button class="qty-inc">+</button>
         </div>
       </div>
 
       <button class="btn btn-primary btn-add">Agregar</button>
     `;
 
-    const qtyInput = $('.qty-input', card);
-    $('.qty-dec', card).onclick = () => qtyInput.value = Math.max(1, (+qtyInput.value||1)-1);
-    $('.qty-inc', card).onclick = () => qtyInput.value = (+qtyInput.value||1)+1;
+    // Eventos qty
+    $('.qty-dec', card).onclick = () => {
+      const input = $(`#qty-${p.sku}`, card);
+      input.value = Math.max(1, (+input.value || 1) - 1);
+    };
+    $('.qty-inc', card).onclick = () => {
+      const input = $(`#qty-${p.sku}`, card);
+      input.value = (+input.value || 1) + 1;
+    };
 
+    // Agregar al carrito (NO abre el carrito)
     $('.btn-add', card).onclick = () => {
-      addToCart(p.sku, +qtyInput.value||1);
-      openCart();
+      const qty = +$(`#qty-${p.sku}`, card).value || 1;
+      addToCart(p.sku, qty);
+      flashAdded(p.title); // toast + latido
     };
 
     grid.appendChild(card);
@@ -103,143 +75,198 @@ function renderProducts() {
 /* ===========================
    Carrito
 =========================== */
-function addToCart(key, qty) {
-  const product = PRODUCTS.find(x => x.sku === key || x.id === key);
-  if (!product) return;
+function updateCart(){
+  // contador
+  $('#cartCount').textContent = [...CART.values()].reduce((a, i) => a + i.qty, 0);
 
-  if (!CART.has(key)) CART.set(key, { product, qty: 0 });
-  CART.get(key).qty += qty;
+  // render items
+  const list = $('#cartItems');
+  if (!list) return;
+  list.innerHTML = '';
 
-  updateCart();
-}
+  let subtotal = 0;
 
-function setQty(key, qty) {
-  if (!CART.has(key)) return;
-  CART.get(key).qty = Math.max(1, Number(qty)||1);
-  updateCart();
-}
+  CART.forEach(({product, qty}) => {
+    subtotal += product.price * qty;
 
-function updateCart() {
-  const count = [...CART.values()].reduce((a, i) => a + i.qty, 0);
-  $('#cartCount').textContent = count;
-
-  const wrap = $('#cartItems');
-  wrap.innerHTML = '';
-
-  CART.forEach(({product, qty}, key) => {
     const row = document.createElement('div');
-    row.className = 'card';
+    row.className = 'cart-item';
     row.innerHTML = `
-      <div class="price-row">
-        <div>
-          <div class="title">${product.title}</div>
-          <div class="sku">SKU: ${product.sku}</div>
-        </div>
-        <strong>${fmt(product.price * qty)}</strong>
-      </div>
-      <div class="qty">
-        <button class="btn dec">−</button>
+      <div class="ci-title">${product.title}</div>
+      <div class="ci-sku">SKU: ${product.sku}</div>
+
+      <div class="ci-controls">
+        <button class="qty-dec">-</button>
         <input class="qty-input" type="number" min="1" value="${qty}">
-        <button class="btn inc">+</button>
-        <button class="btn btn-outline rm" style="margin-left:auto">Quitar</button>
+        <button class="qty-inc">+</button>
+        <button class="btn btn-outline btn-remove">Quitar</button>
       </div>
+
+      <div class="ci-price">${fmt(product.price * qty)}</div>
     `;
 
     const input = $('.qty-input', row);
-    $('.dec', row).onclick = () => { input.value = Math.max(1,(+input.value||1)-1); setQty(key, input.value); };
-    $('.inc', row).onclick = () => { input.value = (+input.value||1)+1; setQty(key, input.value); };
-    $('.rm',  row).onclick = () => { CART.delete(key); updateCart(); };
-    input.onchange          = () => setQty(key, input.value);
 
-    wrap.appendChild(row);
+    $('.qty-dec', row).onclick = () => {
+      const v = Math.max(1, (+input.value || 1) - 1);
+      input.value = v;
+      setQty(product.sku, v);
+    };
+    $('.qty-inc', row).onclick = () => {
+      const v = (+input.value || 1) + 1;
+      input.value = v;
+      setQty(product.sku, v);
+    };
+    $('.btn-remove', row).onclick = () => removeItem(product.sku);
+
+    list.appendChild(row);
   });
 
-  // Totales simples
-  const subtotal = [...CART.values()].reduce((a,i)=> a + i.product.price*i.qty, 0);
-  const envioGratisDesde = 5000;
-  const shipping = subtotal === 0 ? 0 : (subtotal >= envioGratisDesde ? 0 : 800);
-  const payMethod = $('#payMethod')?.value || 'Transferencia';
-  const discount = (payMethod === 'Efectivo') ? Math.round(subtotal * 0.10) : 0;
+  // cálculo de envío / descuento / total
+  const delivery = (document.querySelector('input[name="delivery"]:checked')?.value || 'envio');
+  let shipping = 0;
+  let shippingLabel = '—';
+
+  if (delivery === 'envio'){
+    if (subtotal >= SHIP_THRESHOLD){
+      shipping = 0;
+      shippingLabel = 'Gratis';
+    } else {
+      shipping = SHIP_COST;
+      shippingLabel = fmt(SHIP_COST);
+    }
+  } else {
+    shipping = 0;
+    shippingLabel = 'Retira';
+  }
+
+  const payMethod = $('#payMethod')?.value || 'transferencia';
+  let discount = 0;
+  if (payMethod === 'efectivo') {
+    discount = Math.round(subtotal * 0.10);
+  }
+
   const total = Math.max(0, subtotal + shipping - discount);
 
-  $('#subtotal').textContent      = fmt(subtotal);
-  $('#shippingLabel').textContent = shipping ? fmt(shipping) : 'Gratis';
-  $('#discount').textContent      = fmt(discount);
-  $('#total').textContent         = fmt(total);
+  // pintar resumen
+  $('#subtotal').textContent = fmt(subtotal);
+  $('#shippingLabel').textContent = shippingLabel;
+  $('#discount').textContent = fmt(discount);
+  $('#total').textContent = fmt(total);
 }
+
+function addToCart(sku, qty=1){
+  const product = PRODUCTS.find(p => p.sku === sku);
+  if (!product) return;
+
+  const current = CART.get(sku);
+  CART.set(sku, { product, qty: (current?.qty || 0) + qty });
+  updateCart();
+}
+
+function setQty(sku, qty){
+  const item = CART.get(sku);
+  if (!item) return;
+  item.qty = Math.max(1, +qty || 1);
+  updateCart();
+}
+
+function removeItem(sku){
+  CART.delete(sku);
+  updateCart();
+}
+
+function clearCart(){
+  CART.clear();
+  updateCart();
+}
+
+function openCart(){ $('#cartDrawer')?.classList.add('open'); }
+function closeCart(){ $('#cartDrawer')?.classList.remove('open'); }
 
 /* ===========================
-   Abrir/cerrar
+   Checkout WhatsApp
 =========================== */
-function clearCart(){ 
-  CART.clear(); 
-  updateCart(); 
-}
+function checkout(){
+  if (CART.size === 0){ openCart(); return; }
 
-function openCart(){ 
-  $('#cartDrawer').classList.add('open'); 
-  document.body.classList.add('no-scroll');   // 👈 evita que el fondo scrollee
-}
+  const name  = $('#buyerName')?.value.trim();
+  const phone = $('#buyerPhone')?.value.trim();
+  if (!name || !phone){
+    alert('Completá nombre y WhatsApp');
+    return;
+  }
 
-function closeCart(){ 
-  $('#cartDrawer').classList.remove('open'); 
-  document.body.classList.remove('no-scroll'); // 👈 vuelve a habilitar scroll
-}
-
-/* ===========================
-   Checkout a WhatsApp fijo
-=========================== */
-function checkout() {
-  if (CART.size === 0) { openCart(); return; }
-
-  const name  = $('#buyerName').value.trim();
-  const phone = $('#buyerPhone').value.trim();
-  if (!name || !phone) { alert('Completá nombre y WhatsApp'); return; }
+  const delivery = document.querySelector('input[name="delivery"]:checked')?.value || 'envio';
+  const pay = $('#payMethod')?.value || 'transferencia';
 
   const lines = [];
-  lines.push('*Pedido Tienda Saludable Ixoye*');
+  lines.push('*Pedido Ixoye*');
   lines.push('');
 
+  // Detalle
   CART.forEach(({product, qty}) => {
-    lines.push(`✅ ${product.title} x${qty} = ${fmt(product.price * qty)}`);
+    lines.push(`• ${product.title} x${qty} = ${fmt(product.price*qty)}`);
   });
 
   lines.push('');
+
+  // Resumen (leemos del DOM del resumen)
   lines.push(`Subtotal: ${$('#subtotal').textContent}`);
   lines.push(`Envío: ${$('#shippingLabel').textContent}`);
   lines.push(`Descuento: ${$('#discount').textContent}`);
   lines.push(`*Total: ${$('#total').textContent}*`);
   lines.push('');
-  lines.push(`👤 Nombre: ${name}`);
-  lines.push(`📱 WhatsApp: ${phone}`);
 
-  const shopNumber = '5492235551421';
-  const url = `https://wa.me/${shopNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
+  // Datos
+  lines.push(`*Nombre:* ${name}`);
+  lines.push(`*WhatsApp:* ${phone}`);
+  lines.push(`*Entrega:* ${delivery === 'retira' ? 'Retira' : 'Envío'}`);
+  lines.push(`*Pago:* ${pay}`);
+
+  const msg = encodeURIComponent(lines.join('\n'));
+  const url = `https://wa.me/${STORE_WAPP}?text=${msg}`;
   window.open(url, '_blank');
 }
 
 /* ===========================
-   Init
+   Toast + latido contador
 =========================== */
-async function init(){
-  try {
-    await loadProducts();
-  } catch (e) {
-    console.error(e);
-    PRODUCTS = [];
-  }
+function flashAdded(title){
+  showToast(`✅ Agregado: ${title}`);
 
+  const badge = $('#cartCount');
+  if (badge){
+    badge.classList.remove('pulse');
+    void badge.offsetWidth; // reflow
+    badge.classList.add('pulse');
+  }
+}
+
+let _toastTimer = null;
+function showToast(msg){
+  const el = $('#toast');
+  if (!el){ alert(msg); return; }
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+/* ===========================
+   Listeners y arranque
+=========================== */
+window.addEventListener('DOMContentLoaded', () => {
   renderProducts();
   updateCart();
 
-  $('#openCart').onclick  = openCart;
-  $('#closeCart').onclick = closeCart;
-  $('#clear').onclick     = clearCart;
-  $('#checkout').onclick  = checkout;
+  // listeners globales
+  $('#checkout')?.addEventListener('click', checkout);
+  $('#clearCart')?.addEventListener('click', clearCart);
+  $('#openCart')?.addEventListener('click', openCart);
+  $('#closeCart')?.addEventListener('click', closeCart);
+
+  // si cambian entrega o método de pago, recalculamos
+  $$('input[name="delivery"]').forEach(r => r.addEventListener('change', updateCart));
   $('#payMethod')?.addEventListener('change', updateCart);
-  document.querySelectorAll('input[name="delivery"]').forEach(r => r.addEventListener('change', updateCart));
-}
-
-document.addEventListener('DOMContentLoaded', init);
-
- 
+});
