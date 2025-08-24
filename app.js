@@ -145,10 +145,9 @@ function checkout() {
     return; 
   }
 
-  // Helper: buscar producto por SKU
-  function getProductBySku(sku) {
-    if (Array.isArray(PRODUCTS)) {
-      return PRODUCTS.find(p => p.sku === sku);
+CART.forEach((product, qty) => {
+  lines.push(`✅ ${product.name} x${qty} = $${fmt(product.price * qty)}`);
+});
     }
     return PRODUCTS.get ? PRODUCTS.get(sku) : PRODUCTS[sku];
   }
