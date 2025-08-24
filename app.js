@@ -263,27 +263,29 @@ function showToast(msg){
   _toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
 }
 
-/* ===========================
-   Listeners y arranque
-=========================== */
+// Listeners y arranque
 window.addEventListener('DOMContentLoaded', async () => {
   // Cargar productos antes de renderizar
   if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0) {
     await loadProducts();
   }
 
+  // Render y carrito
   renderProducts();
   updateCart();
 
-  // listeners globales
+  // Listeners globales
   $('#checkout')?.addEventListener('click', checkout);
   $('#clearCart')?.addEventListener('click', clearCart);
   $('#openCart')?.addEventListener('click', openCart);
   $('#closeCart')?.addEventListener('click', closeCart);
 
-  $$('input[name="delivery"]').forEach(r => r.addEventListener('change', updateCart));
+  $$('input[name="delivery"]').forEach(r =>
+    r.addEventListener('change', updateCart)
+  );
   $('#payMethod')?.addEventListener('change', updateCart);
 });
+
 
   // si cambian entrega o método de pago, recalculamos
   $$('input[name="delivery"]').forEach(r => r.addEventListener('change', updateCart));
