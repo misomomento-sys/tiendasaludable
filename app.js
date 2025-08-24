@@ -121,72 +121,41 @@ function closeCart(){ $('#cartDrawer')?.classList.remove('open'); }
 /* ================================
    Render de productos
 ================================ */
-function renderProducts () {
-  const grid = $('#productGrid');
-  if (!grid) return;
-  grid.innerHTML = '';
+<div class="card" data-id="${p.id}">
+  <div class="img-wrap">
+    <img src="assets/${p.image}" alt="${p.title}">
+  </div>
+  <h3 class="title">${p.title}</h3>
+  <p class="sku">SKU: ${p.sku}</p>
 
+  <div class="price-row">
+    <div class="qty">
+      <button type="button" class="qty-dec">-</button>
+      <input class="qty-input" type="number" min="1" value="1">
+      <button type="button" class="qty-inc">+</button>
+    </div>
+
+    <button type="button" class="btn btn-add" data-id="${p.id}">Agregar</button>
+  </div>
+</div>
+
+
+window.addEventListener('DOMContentLoaded', async () => {
+  // 1) cargamos productos si hace falta
   if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0) {
-    grid.innerHTML = '<p style="padding:16px">No hay productos para mostrar.</p>';
-    return;
+    await loadProducts();
   }
 
-  PRODUCTS.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.dataset.id = p.id; // <-- MUY IMPORTANTE
+  // 2) pintamos tarjetas y conectamos eventos
+  renderProducts();
+  attachGridEvents();   // <-- importante, después de render
 
-    card.innerHTML = `
-      <div class="img-wrap">
-        <img src="assets/${p.image}" alt="${p.title}">
-      </div>
+  // 3) refrescamos totales/badge si ya había algo en carrito
+  updateCart();
 
-      <h3 class="title">${p.title}</h3>
-      <p class="sku">SKU: ${p.sku}</p>
+  // listeners globales que ya tenías (checkout, clear, open, close, delivery/pay change)
+});
 
-      <div class="price-row">
-        <strong class="price">${fmt(p.price)}</strong>
-        <div class="qty">
-          <button type="button" class="qty-dec">-</button>
-          <input type="number" class="qty-input" min="1" value="1">
-          <button type="button" class="qty-inc">+</button>
-        </div>
-      </div>
-
-      <button type="button" class="btn btn-add">Agregar</button>
-    `;
-
-    grid.appendChild(card);
-  });
-}
-
-
-/* ================================
-   Eventos de la grilla (delegación)
-================================ */
-function attachGridEvents(){
-  const grid = $('#productGrid');
-  if (!grid) return;
-
-  // Evitá registrarlo más de una vez
-  if (grid.dataset.listeners === '1') return;
-
-  grid.addEventListener('click', (e) => {
-    // +/- cantidad
-    const dec = e.target.closest('.qty-dec');
-    const inc = e.target.closest('.qty-inc');
-    const add = e.target.closest('.btn-add');
-
-    if (dec || inc){
-      const wrap = e.target.closest('.qty');
-      if (!wrap) return;
-      const input = wrap.querySelector('.qty-input');
-      let val = Number(input.value) || 1;
-      if (dec) val = Math.max(1, val - 1);
-      if (inc) val = val + 1;
-      input.value = val;
-      return;
-    }
 
     // Agregar al carrito
     if (add){
