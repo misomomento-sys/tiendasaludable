@@ -119,12 +119,11 @@ function closeCart(){ $('#cartDrawer')?.classList.remove('open'); }
 
 
 /* ================================
-   Render de productos (con eventos)
+   Render de productos
 ================================ */
 function renderProducts () {
   const grid = $('#productGrid');
   if (!grid) return;
-
   grid.innerHTML = '';
 
   if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0) {
@@ -135,9 +134,11 @@ function renderProducts () {
   PRODUCTS.forEach(p => {
     const card = document.createElement('div');
     card.className = 'card';
+    card.dataset.id = p.id; // <-- MUY IMPORTANTE
+
     card.innerHTML = `
       <div class="img-wrap">
-        <img src="${p.image}" alt="${p.title}">
+        <img src="assets/${p.image}" alt="${p.title}">
       </div>
 
       <h3 class="title">${p.title}</h3>
@@ -146,37 +147,14 @@ function renderProducts () {
       <div class="price-row">
         <strong class="price">${fmt(p.price)}</strong>
         <div class="qty">
-          <button class="qty-dec" type="button">-</button>
-          <input class="qty-input" type="number" min="1" value="1">
-          <button class="qty-inc" type="button">+</button>
+          <button type="button" class="qty-dec">-</button>
+          <input type="number" class="qty-input" min="1" value="1">
+          <button type="button" class="qty-inc">+</button>
         </div>
       </div>
 
-      <button class="btn btn-add" type="button" data-id="${p.id}">
-        Agregar
-      </button>
+      <button type="button" class="btn btn-add">Agregar</button>
     `;
-
-    // 🔗 Conectar eventos de esta tarjeta
-    const qtyInput = card.querySelector('.qty-input');
-    const btnInc   = card.querySelector('.qty-inc');
-    const btnDec   = card.querySelector('.qty-dec');
-    const btnAdd   = card.querySelector('.btn-add');
-
-    btnInc.addEventListener('click', () => {
-      qtyInput.value = Number(qtyInput.value || 1) + 1;
-    });
-
-    btnDec.addEventListener('click', () => {
-      qtyInput.value = Math.max(1, Number(qtyInput.value || 1) - 1);
-    });
-
-    btnAdd.addEventListener('click', () => {
-      const qty = Number(qtyInput.value || 1);
-      addToCart(p.id, qty);     // <- ya actualiza totales adentro
-      // Si querés que NO se abra el cajón, no llames openCart() acá.
-      // openCart();  // déjalo comentado si no querés bloquear la vista
-    });
 
     grid.appendChild(card);
   });
@@ -402,7 +380,46 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // 2) Render y totales
   renderProducts();   // ← esto ya pinta las tarjetas y les conecta los botones
-  updateCart();
+  updateCart();// -- Delegación de eventos en la grilla --
+const grid = $('#productGrid');
+if (grid) {
+  // clicks en + / - / Agregar
+  grid.addEventListener('click', (ev) => {
+    const btn  = ev.target.closest('button');
+    if (!btn) return;
+
+    const card = ev.target.closest('.card');
+    if (!card) return;
+
+    const id    = card.dataset.id;
+    const input = card.querySelector('.qty-input');
+    let qty     = Number(input?.value || 1);
+
+    if (btn.classList.contains('qty-inc')) {
+      input.value = ++qty;
+      return;
+    }
+
+    if (btn.classList.contains('qty-dec')) {
+      qty = Math.max(1, qty - 1);
+      input.value = qty;
+      return;
+    }
+
+    if (btn.classList.contains('btn-add')) {
+      addToCart(id, qty);     // <-- usa tu helper
+      return;
+    }
+  });
+
+  // sanear cambios manuales en el input
+  grid.addEventListener('change', (ev) => {
+    if (!ev.target.classList.contains('qty-input')) return;
+    const v = Math.max(1, Number(ev.target.value || 1));
+    ev.target.value = v;
+  });
+}
+
 
   // 3) Listeners globales (dejanos estos)
   $('#checkout')?.addEventListener('click', checkout);
