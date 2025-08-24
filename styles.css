@@ -67,5 +67,15 @@ body {
 @media (max-width:720px){
   .header h1{ font-size:18px; }
 }
+/* Inputs de checkout */
+#buyerName,
+#buyerPhone {
+  width: 100%;          /* ocupa todo el ancho disponible */
+  padding: 14px;        /* más alto */
+  font-size: 18px;      /* letras más grandes */
+  border: 2px solid #4caf50; /* verde saludable */
+  border-radius: 8px;
+  margin-bottom: 12px;  /* espacio entre ellos */
+}
 
 
