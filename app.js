@@ -96,6 +96,35 @@ grid.appendChild(card);
     }
   }, { once: true }); // nos suscribimos una vez a la grilla
 }
+function attachGridEvents(){
+  const grid = document.querySelector('#productGrid');
+  if (!grid) return;
+
+  grid.addEventListener('click', (e) => {
+    const inc = e.target.closest('.qty-inc');
+    if (inc) {
+      const input = inc.closest('.qty').querySelector('.qty-input');
+      input.value = (parseInt(input.value,10) || 1) + 1;
+      return;
+    }
+
+    const dec = e.target.closest('.qty-dec');
+    if (dec) {
+      const input = dec.closest('.qty').querySelector('.qty-input');
+      input.value = Math.max(1, (parseInt(input.value,10) || 1) - 1);
+      return;
+    }
+
+    const add = e.target.closest('.btn-add');
+    if (add) {
+      const card = add.closest('.card');
+      const input = card.querySelector('.qty-input');
+      const qty = Math.max(1, parseInt(input.value,10) || 1);
+      addToCart(add.dataset.id, qty); // usa tu función de carrito
+      // openCart(); // si NO querés que se abra, dejalo comentado
+    }
+  });
+}
 
 /* ===========================
    Carrito
