@@ -130,7 +130,7 @@ function openCart(){ el('#cartDrawer').classList.add('open'); }
 function closeCart(){ el('#cartDrawer').classList.remove('open'); }
 
 /* ================================
-   Checkout WhatsApp
+   Checkout WhatsApp (robusto)
 ================================ */
 function checkout() {
   if (CART.size === 0) { 
@@ -138,30 +138,48 @@ function checkout() {
     return; 
   }
 
-  const name = el('#buyerName').value.trim();
+  const name  = el('#buyerName').value.trim();
   const phone = el('#buyerPhone').value.trim();
   if (!name || !phone) { 
     alert('Completá nombre y WhatsApp'); 
     return; 
   }
 
-CART.forEach((product, qty) => {
-  lines.push(`✅ ${product.name} x${qty} = $${fmt(product.price * qty)}`);
-});
+  // Helper: buscar producto por ID o SKU dentro de PRODUCTS (array u objeto)
+  function findProduct(key) {
+    if (!PRODUCTS) return null;
+    // Array
+    if (Array.isArray(PRODUCTS)) {
+      return PRODUCTS.find(p => p.id === key || p.sku === key);
     }
-    return PRODUCTS.get ? PRODUCTS.get(sku) : PRODUCTS[sku];
+    // Map u objeto
+    return PRODUCTS.get ? PRODUCTS.get(key) : PRODUCTS[key];
   }
 
   const lines = [];
   lines.push('*Pedido Tienda Saludable Ixoye*');
   lines.push('');
 
-  CART.forEach((qty, sku) => {
-    const p = getProductBySku(sku);
-    const title = p?.name || p?.title || sku;   // fallback: muestra el SKU
-    const price = Number(p?.price) || 0;
+  // Soporta ambos formatos de CART:
+  // A) id -> { product, qty }
+  // B) sku/id -> qty
+  CART.forEach((val, key) => {
+    let productObj, qty;
 
-    lines.push(`- ${title} x${qty} = $${fmt(price * qty)}`);
+    if (typeof val === 'object' && val && 'product' in val && 'qty' in val) {
+      // Formato A
+      productObj = val.product;
+      qty        = Number(val.qty) || 1;
+    } else {
+      // Formato B
+      qty        = Number(val) || 1;
+      productObj = findProduct(key);
+    }
+
+    const title = (productObj?.name || productObj?.title || key);
+    const price = Number(productObj?.price) || 0;
+
+    lines.push(`✅ ${title} x${qty} = $${fmt(price * qty)}`);
   });
 
   lines.push('');
@@ -172,6 +190,13 @@ CART.forEach((product, qty) => {
   lines.push('');
   lines.push(`👤 Nombre: ${name}`);
   lines.push(`📱 WhatsApp: ${phone}`);
+
+  const shopNumber = '5492235551421'; // WhatsApp fijo de la tienda
+  const msg = encodeURIComponent(lines.join('\n'));
+  const url = `https://wa.me/${shopNumber}?text=${msg}`;
+  window.open(url, '_blank');
+}
+
 
   // Abrir WhatsApp de la tienda directamente
   const msg = encodeURIComponent(lines.join('\n'));
