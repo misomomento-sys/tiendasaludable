@@ -172,5 +172,23 @@ body.no-scroll {
   50%{ transform: scale(1.25); }
   100%{ transform: scale(1); }
 }
+/* Drawer que no bloquee clics cuando está cerrado */
+.drawer{
+  position: fixed;
+  top: 0;
+  right: -120%;          /* bien fuera de pantalla */
+  width: 100%;
+  max-width: 420px;
+  height: 100dvh;
+  background: #fff;
+  border-left: 1px solid #e5e7eb;
+  transition: right .25s ease;
+  z-index: 1000;
+  pointer-events: none;   /* ❗ no intercepta clics si está cerrado */
+}
+.drawer.open{
+  right: 0;
+  pointer-events: auto;   /* ❗ solo clickeable cuando está abierto */
+}
 
 
