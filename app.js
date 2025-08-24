@@ -1,25 +1,55 @@
 /* ===========================
-   Estado & helpers
+   Helpers y estado
 =========================== */
 let PRODUCTS = [];
-const CART = new Map(); // id -> {product, qty}
+const CART = new Map(); // clave: sku o id -> { product, qty }
 
-const el = (sel, ctx=document) => ctx.querySelector(sel);
-const fmt = n => `$ ${n.toLocaleString('es-AR')}`;
+const $ = (sel, ctx=document) => ctx.querySelector(sel);
+const fmt = n => `$ ${Number(n||0).toLocaleString('es-AR')}`;
+
+/* ===========================
+   Carga de productos
+=========================== */
+async function loadProducts() {
+  const url = '/products.json?v=' + Date.now(); // anti-cache
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error('No pude leer products.json');
+  const items = await res.json();
+
+  // Normalización mínima por si hay name/title, image con/ sin assets/
+  PRODUCTS = (items || []).map(p => {
+    const title = p.name ?? p.title ?? 'Producto';
+    let image  = p.image ?? '';
+    if (image && !image.startsWith('assets/')) image = 'assets/' + image;
+    return {
+      id:  p.id ?? p.sku ?? title,
+      sku: p.sku ?? p.id ?? title,
+      title,
+      price: Number(p.price) || 0,
+      image
+    };
+  });
+}
 
 /* ===========================
    Render de productos
 =========================== */
-function renderProducts(list){
-  const grid = el('#productGrid');
+function renderProducts() {
+  const grid = $('#productGrid');
+  if (!grid) return;
   grid.innerHTML = '';
 
-  list.forEach(p => {
+  if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0) {
+    grid.innerHTML = `<p style="padding:16px">No hay productos para mostrar.</p>`;
+    return;
+  }
+
+  PRODUCTS.forEach(p => {
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
       <div class="img-wrap">
-        <img src="assets/${p.image}" alt="${p.title}" onerror="this.src='assets/portada-ixoye.png'">
+        <img src="${p.image}" alt="${p.title}">
       </div>
       <h3 class="title">${p.title}</h3>
       <p class="sku">SKU: ${p.sku}</p>
@@ -36,14 +66,12 @@ function renderProducts(list){
       <button class="btn btn-primary btn-add">Agregar</button>
     `;
 
-    // qty controls
-    const input = el('.qty-input', card);
-    el('.qty-dec', card).onclick = () => input.value = Math.max(1, (+input.value||1) - 1);
-    el('.qty-inc', card).onclick = () => input.value = (+input.value||1) + 1;
+    const qtyInput = $('.qty-input', card);
+    $('.qty-dec', card).onclick = () => qtyInput.value = Math.max(1, (+qtyInput.value||1)-1);
+    $('.qty-inc', card).onclick = () => qtyInput.value = (+qtyInput.value||1)+1;
 
-    // add
-    el('.btn-add', card).onclick = () => {
-      addToCart(p.id, +input.value || 1);
+    $('.btn-add', card).onclick = () => {
+      addToCart(p.sku, +qtyInput.value||1);
       openCart();
     };
 
@@ -54,26 +82,30 @@ function renderProducts(list){
 /* ===========================
    Carrito
 =========================== */
-function addToCart(id, qty){
-  const product = PRODUCTS.find(x => x.id === id);
-  if(!product) return;
+function addToCart(key, qty) {
+  const product = PRODUCTS.find(x => x.sku === key || x.id === key);
+  if (!product) return;
 
-  if(!CART.has(id)) CART.set(id, { product, qty:0 });
-  CART.get(id).qty += qty;
+  if (!CART.has(key)) CART.set(key, { product, qty: 0 });
+  CART.get(key).qty += qty;
 
   updateCart();
 }
 
-function updateCart(){
-  // contar
-  const count = [...CART.values()].reduce((a, i) => a + i.qty, 0);
-  el('#cartCount').textContent = count;
+function setQty(key, qty) {
+  if (!CART.has(key)) return;
+  CART.get(key).qty = Math.max(1, Number(qty)||1);
+  updateCart();
+}
 
-  // items
-  const wrap = el('#cartItems');
+function updateCart() {
+  const count = [...CART.values()].reduce((a, i) => a + i.qty, 0);
+  $('#cartCount').textContent = count;
+
+  const wrap = $('#cartItems');
   wrap.innerHTML = '';
 
-  CART.forEach(({product, qty}) => {
+  CART.forEach(({product, qty}, key) => {
     const row = document.createElement('div');
     row.className = 'card';
     row.innerHTML = `
@@ -91,117 +123,66 @@ function updateCart(){
         <button class="btn btn-outline rm" style="margin-left:auto">Quitar</button>
       </div>
     `;
-    const input = el('.qty-input', row);
-    el('.dec', row).onclick = () => { input.value = Math.max(1,(+input.value||1)-1); setQty(product.id,+input.value); };
-    el('.inc', row).onclick = () => { input.value = (+input.value||1)+1; setQty(product.id,+input.value); };
-    el('.rm', row).onclick  = () => { CART.delete(product.id); updateCart(); };
 
-    input.onchange = () => setQty(product.id, +input.value||1);
+    const input = $('.qty-input', row);
+    $('.dec', row).onclick = () => { input.value = Math.max(1,(+input.value||1)-1); setQty(key, input.value); };
+    $('.inc', row).onclick = () => { input.value = (+input.value||1)+1; setQty(key, input.value); };
+    $('.rm',  row).onclick = () => { CART.delete(key); updateCart(); };
+    input.onchange          = () => setQty(key, input.value);
 
     wrap.appendChild(row);
   });
 
-  // totales
-  const subtotal = [...CART.values()].reduce((a,i)=>a + i.product.price*i.qty,0);
+  // Totales simples
+  const subtotal = [...CART.values()].reduce((a,i)=> a + i.product.price*i.qty, 0);
   const envioGratisDesde = 5000;
   const shipping = subtotal === 0 ? 0 : (subtotal >= envioGratisDesde ? 0 : 800);
-  const payMethod = el('#payMethod')?.value || 'Transferencia';
+  const payMethod = $('#payMethod')?.value || 'Transferencia';
   const discount = (payMethod === 'Efectivo') ? Math.round(subtotal * 0.10) : 0;
   const total = Math.max(0, subtotal + shipping - discount);
 
-  el('#subtotal').textContent     = fmt(subtotal);
-  el('#shippingLabel').textContent= shipping ? fmt(shipping) : 'Gratis';
-  el('#discount').textContent     = fmt(discount);
-  el('#total').textContent        = fmt(total);
+  $('#subtotal').textContent      = fmt(subtotal);
+  $('#shippingLabel').textContent = shipping ? fmt(shipping) : 'Gratis';
+  $('#discount').textContent      = fmt(discount);
+  $('#total').textContent         = fmt(total);
 }
 
-function setQty(id, qty){
-  if(!CART.has(id)) return;
-  CART.get(id).qty = Math.max(1, qty);
-  updateCart();
-}
+/* ===========================
+   Abrir/cerrar
+=========================== */
+function clearCart(){ CART.clear(); updateCart(); }
+function openCart(){ $('#cartDrawer').classList.add('open'); }
+function closeCart(){ $('#cartDrawer').classList.remove('open'); }
 
-function clearCart(){
-  CART.clear();
-  updateCart();
-}
-
-function openCart(){ el('#cartDrawer').classList.add('open'); }
-function closeCart(){ el('#cartDrawer').classList.remove('open'); }
-
-/* ================================
-   Checkout WhatsApp (robusto)
-================================ */
+/* ===========================
+   Checkout a WhatsApp fijo
+=========================== */
 function checkout() {
-  if (CART.size === 0) { 
-    openCart(); 
-    return; 
-  }
+  if (CART.size === 0) { openCart(); return; }
 
-  const name  = el('#buyerName').value.trim();
-  const phone = el('#buyerPhone').value.trim();
-  if (!name || !phone) { 
-    alert('Completá nombre y WhatsApp'); 
-    return; 
-  }
-
-  // Helper: buscar producto por ID o SKU dentro de PRODUCTS (array u objeto)
-  function findProduct(key) {
-    if (!PRODUCTS) return null;
-    // Array
-    if (Array.isArray(PRODUCTS)) {
-      return PRODUCTS.find(p => p.id === key || p.sku === key);
-    }
-    // Map u objeto
-    return PRODUCTS.get ? PRODUCTS.get(key) : PRODUCTS[key];
-  }
+  const name  = $('#buyerName').value.trim();
+  const phone = $('#buyerPhone').value.trim();
+  if (!name || !phone) { alert('Completá nombre y WhatsApp'); return; }
 
   const lines = [];
   lines.push('*Pedido Tienda Saludable Ixoye*');
   lines.push('');
 
-  // Soporta ambos formatos de CART:
-  // A) id -> { product, qty }
-  // B) sku/id -> qty
-  CART.forEach((val, key) => {
-    let productObj, qty;
-
-    if (typeof val === 'object' && val && 'product' in val && 'qty' in val) {
-      // Formato A
-      productObj = val.product;
-      qty        = Number(val.qty) || 1;
-    } else {
-      // Formato B
-      qty        = Number(val) || 1;
-      productObj = findProduct(key);
-    }
-
-    const title = (productObj?.name || productObj?.title || key);
-    const price = Number(productObj?.price) || 0;
-
-    lines.push(`✅ ${title} x${qty} = $${fmt(price * qty)}`);
+  CART.forEach(({product, qty}) => {
+    lines.push(`✅ ${product.title} x${qty} = ${fmt(product.price * qty)}`);
   });
 
   lines.push('');
-  lines.push(`Subtotal: ${el('#subtotal').textContent}`);
-  lines.push(`Envío: ${el('#shippingLabel').textContent}`);
-  lines.push(`Descuento: ${el('#discount').textContent}`);
-  lines.push(`*Total: ${el('#total').textContent}*`);
+  lines.push(`Subtotal: ${$('#subtotal').textContent}`);
+  lines.push(`Envío: ${$('#shippingLabel').textContent}`);
+  lines.push(`Descuento: ${$('#discount').textContent}`);
+  lines.push(`*Total: ${$('#total').textContent}*`);
   lines.push('');
   lines.push(`👤 Nombre: ${name}`);
   lines.push(`📱 WhatsApp: ${phone}`);
 
-  const shopNumber = '5492235551421'; // WhatsApp fijo de la tienda
-  const msg = encodeURIComponent(lines.join('\n'));
-  const url = `https://wa.me/${shopNumber}?text=${msg}`;
-  window.open(url, '_blank');
-}
-
-
-  // Abrir WhatsApp de la tienda directamente
-  const msg = encodeURIComponent(lines.join('\n'));
-  const shopNumber = "5492235551421"; // número de tu tienda
-  const url = `https://wa.me/${shopNumber}?text=${msg}`;
+  const shopNumber = '5492235551421';
+  const url = `https://wa.me/${shopNumber}?text=${encodeURIComponent(lines.join('\n'))}`;
   window.open(url, '_blank');
 }
 
@@ -209,24 +190,24 @@ function checkout() {
    Init
 =========================== */
 async function init(){
-  try{
-    const res = await fetch('products.json', {cache:'no-store'});
-    PRODUCTS = await res.json();
-  }catch(e){
-    console.error('No se pudo leer products.json', e);
+  try {
+    await loadProducts();
+  } catch (e) {
+    console.error(e);
     PRODUCTS = [];
   }
 
-  renderProducts(PRODUCTS);
+  renderProducts();
   updateCart();
 
-  // eventos carrito
-  el('#openCart').onclick  = openCart;
-  el('#closeCart').onclick = closeCart;
-  el('#clear').onclick     = clearCart;
-  el('#checkout').onclick  = checkout;
-  el('#payMethod').onchange= updateCart;
-  document.querySelectorAll('input[name="delivery"]').forEach(r => r.onchange = updateCart);
+  $('#openCart').onclick  = openCart;
+  $('#closeCart').onclick = closeCart;
+  $('#clear').onclick     = clearCart;
+  $('#checkout').onclick  = checkout;
+  $('#payMethod')?.addEventListener('change', updateCart);
+  document.querySelectorAll('input[name="delivery"]').forEach(r => r.addEventListener('change', updateCart));
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+ 
