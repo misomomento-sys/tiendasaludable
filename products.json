@@ -2,65 +2,43 @@
   {
     "id": "AV-500",
     "sku": "AV-500",
-    "name": "Avena Tradicional 500 g",
+    "title": "Avena Tradicional 500 g",
     "price": 2200,
-    "image": "assets/avena.jpg"
+    "image": "avena.png"
   },
   {
     "id": "WF-PRO",
     "sku": "WF-PRO",
-    "name": "Waffles Proteicos (pack)",
+    "title": "Waffles Proteicos (pack)",
     "price": 4200,
-    "image": "assets/waffles.png"
+    "image": "waffles.png"
   },
   {
     "id": "TE-JA-100",
     "sku": "TE-JA-100",
-    "name": "Té de Jamaica 100 g",
+    "title": "Té de Jamaica 100 g",
     "price": 3500,
-    "image": "assets/te-jamaica.jpg"
+    "image": "te-jamaica.png"
   },
   {
-    "id": "PAN-INT",
-    "sku": "PAN-INT",
-    "name": "Pan Integral",
+    "id": "MI-250",
+    "sku": "MI-250",
+    "title": "Miel 250 g",
     "price": 2600,
-    "image": "assets/pan-integral.jpg"
+    "image": "miel.png"
   },
   {
-    "id": "MIX-FRU",
-    "sku": "MIX-FRU",
-    "name": "Mix de Frutos Secos",
-    "price": 5900,
-    "image": "assets/mix-frutos.jpg"
-  },
-  {
-    "id": "MIEL-1",
-    "sku": "MIEL-1",
-    "name": "Miel Pura",
-    "price": 4800,
-    "image": "assets/miel.jpg"
-  },
-  {
-    "id": "CHO-AM",
-    "sku": "CHO-AM",
-    "name": "Chocolate Amargo",
+    "id": "MX-200",
+    "sku": "MX-200",
+    "title": "Mix de frutos 200 g",
     "price": 3100,
-    "image": "assets/chocolate-amargo.jpg"
+    "image": "mix-frutos.png"
   },
   {
-    "id": "ACE-COCO",
-    "sku": "ACE-COCO",
-    "name": "Aceite de Coco (vidrio)",
-    "price": 6900,
-    "image": "assets/aceite-coco-vidrio.jpg"
-  },
-  {
-    "id": "ACE-OLI",
-    "sku": "ACE-OLI",
-    "name": "Aceite de Oliva",
-    "price": 7200,
-    "image": "assets/aceite-oliva.jpg"
+    "id": "PAN-INT-500",
+    "sku": "PAN-INT-500",
+    "title": "Pan integral 500 g",
+    "price": 1800,
+    "image": "pan-integral.png"
   }
 ]
-
