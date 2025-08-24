@@ -294,6 +294,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // 2) Render y totales
   renderProducts();
+  attachGridEvents();
   updateCart();
 
   // 3) Listeners globales
