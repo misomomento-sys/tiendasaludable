@@ -43,12 +43,56 @@ async function loadProducts(){
 /* ================================
    Carrito - helpers
 ================================ */
+function updateCart() {
+  const itemsContainer = $('#cartItems');
+  const summarySubtotal = $('#subtotal');
+  const summaryShipping = $('#shippingLabel');
+  const summaryDiscount = $('#discount');
+  const summaryTotal = $('#total');
+  const cartCount = $('#cartCount');
 
-function addToCart(id, qty = 1){
-  const current = CART.get(id) || 0;
-  CART.set(id, Math.max(1, current + qty));
-  updateCart(); // no abre el cajón; sólo actualiza totales
+  if (!itemsContainer) return;
+
+  itemsContainer.innerHTML = '';
+  let subtotal = 0;
+
+  CART.forEach((qty, id) => {
+    const product = PRODUCTS.find(p => p.id === id);
+    if (!product) return;
+
+    subtotal += product.price * qty;
+
+    const item = document.createElement('div');
+    item.className = 'cart-item';
+    item.innerHTML = `
+      <div class="ci-title">${product.title}</div>
+      <div class="ci-controls">
+        <button onclick="setQty('${id}', ${qty - 1})">-</button>
+        <input type="number" value="${qty}" min="1" onchange="setQty('${id}', this.value)">
+        <button onclick="setQty('${id}', ${qty + 1})">+</button>
+        <span>${fmt(product.price * qty)}</span>
+        <button onclick="setQty('${id}', 0)">Quitar</button>
+      </div>
+    `;
+    itemsContainer.appendChild(item);
+  });
+
+  // Calcular envío y descuentos
+  const shipping = subtotal > 0 && subtotal < FREE_SHIPPING_MIN ? SHIPPING_FEE : 0;
+  const discount = 0; // (si querés agregar después lógica de descuentos)
+
+  const total = subtotal + shipping - discount;
+
+  // Actualizar resumen
+  summarySubtotal.textContent = fmt(subtotal);
+  summaryShipping.textContent = shipping > 0 ? fmt(shipping) : '—';
+  summaryDiscount.textContent = fmt(discount);
+  summaryTotal.textContent = fmt(total);
+
+  // Actualizar contador de carrito
+  cartCount.textContent = CART.size;
 }
+
 
 function setQty(id, qty){
   qty = Number(qty);
