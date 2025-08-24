@@ -121,57 +121,84 @@ function closeCart(){ $('#cartDrawer')?.classList.remove('open'); }
 /* ================================
    Render de productos
 ================================ */
-
-function resolveImagePath(filename){
-  if (!filename) return '';
-  // si ya viene con http/https o assets/ lo dejo
-  if (/^https?:\/\//i.test(filename) || filename.startsWith('assets/')) return filename;
-  // si viene sólo el nombre, prefijo assets/
-  return `assets/${filename}`;
-}
-
 function renderProducts(){
   const grid = $('#productGrid');
   if (!grid) return;
-
   grid.innerHTML = '';
 
   if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0){
-    grid.innerHTML = `<p style="padding:16px">No hay productos para mostrar.</p>`;
+    grid.innerHTML = '<p style="padding:16px">No hay productos para mostrar.</p>';
     return;
   }
 
   PRODUCTS.forEach(p => {
     const card = document.createElement('div');
     card.className = 'card';
-    // guardo el id para los botones
-    card.dataset.id = p.id;
-
-    const imgSrc = resolveImagePath(p.image);
-
     card.innerHTML = `
       <div class="img-wrap">
-        <img src="${imgSrc}" alt="${p.title}">
+        <img src="${p.image}" alt="${p.title}">
       </div>
+
       <h3 class="title">${p.title}</h3>
       <p class="sku">SKU: ${p.sku}</p>
 
       <div class="price-row">
         <strong class="price">${fmt(p.price)}</strong>
-        <div class="qty">
-          <button class="qty-dec" aria-label="Menos">−</button>
+        <div class="qty" data-id="${p.id}">
+          <button class="qty-dec">-</button>
           <input class="qty-input" type="number" min="1" value="1">
-          <button class="qty-inc" aria-label="Más">+</button>
+          <button class="qty-inc">+</button>
         </div>
       </div>
 
-      <button class="btn btn-add">Agregar</button>
+      <button class="btn btn-add" data-id="${p.id}">Agregar</button>
     `;
-
     grid.appendChild(card);
   });
 }
+/* ================================
+   Eventos de la grilla (delegación)
+================================ */
+function attachGridEvents(){
+  const grid = $('#productGrid');
+  if (!grid) return;
 
+  // Evitá registrarlo más de una vez
+  if (grid.dataset.listeners === '1') return;
+
+  grid.addEventListener('click', (e) => {
+    // +/- cantidad
+    const dec = e.target.closest('.qty-dec');
+    const inc = e.target.closest('.qty-inc');
+    const add = e.target.closest('.btn-add');
+
+    if (dec || inc){
+      const wrap = e.target.closest('.qty');
+      if (!wrap) return;
+      const input = wrap.querySelector('.qty-input');
+      let val = Number(input.value) || 1;
+      if (dec) val = Math.max(1, val - 1);
+      if (inc) val = val + 1;
+      input.value = val;
+      return;
+    }
+
+    // Agregar al carrito
+    if (add){
+      const id = add.dataset.id;
+      // Busco la qty que está justo antes del botón
+      const wrap = add.previousElementSibling?.closest('.price-row')?.querySelector('.qty')
+               || add.parentElement.querySelector('.qty');
+      const qty = wrap ? (Number(wrap.querySelector('.qty-input').value) || 1) : 1;
+
+      addToCart(id, qty);   // ya NO abre el cajón
+      // si querés que abra el cajón, descomentá:
+      // openCart();
+    }
+  });
+
+  grid.dataset.listeners = '1';
+}
 
 /* ================================
    Event delegation en la grilla
@@ -342,21 +369,18 @@ function checkout(){
 ================================ */
 
 window.addEventListener('DOMContentLoaded', async () => {
-  // 1) cargar productos primero
-  await loadProducts();
+  // 1) Cargar productos antes de renderizar
+  if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0) {
+    await loadProducts();
+  }
 
-  // 2) render, eventos de grilla y totales
+  // 2) Render y eventos de la grilla
   renderProducts();
-  attachGridEvents();
+  attachGridEvents();   // <-- importante
+
+  // 3) Totales del carrito
   updateCart();
 
-  // 3) listeners globales del carrito
-  $('#checkout')?.addEventListener('click', checkout);
-  $('#clearCart')?.addEventListener('click', clearCart);
-  $('#openCart')?.addEventListener('click', openCart);
-  $('#closeCart')?.addEventListener('click', closeCart);
-
-  // recalcular totales si cambia entrega o pago
-  $$('input[name="delivery"]').forEach(r => r.addEventListener('change', updateCart));
-  $('#payMethod')?.addEventListener('change', updateCart);
+  // (de acá para abajo tus listeners globales existentes)
 });
+
