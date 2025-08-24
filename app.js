@@ -133,42 +133,44 @@ function closeCart(){ el('#cartDrawer').classList.remove('open'); }
    Checkout WhatsApp
 =========================== */
 function checkout(){
-  if(CART.size === 0) { openCart(); return; }
+    if (CART.size === 0) {
+        openCart();
+        return;
+    }
 
-  const name = el('#buyerName').value.trim();
-  const phone= el('#buyerPhone').value.trim();
-  if(!name || !phone){ alert('Completá nombre y WhatsApp'); return; }
+    const name  = el('#buyerName').value.trim();
+    const phone = el('#buyerPhone').value.trim();
 
-  const delivery = document.querySelector('input[name="delivery"]:checked')?.value || 'envio';
-  const pay = el('#payMethod').value;
+    if (!name || !phone) {
+        alert('Completá nombre y WhatsApp');
+        return;
+    }
 
-  const lines = [];
-  lines.push('*Pedido Ixoye*');
-  lines.push('');
-  CART.forEach(({product, qty}) => {
-    lines.push(`• ${product.title} x${qty} — ${fmt(product.price*qty)}`);
-  });
-  lines.push('');
-  lines.push(`Subtotal: ${el('#subtotal').textContent}`);
-  lines.push(`Envío: ${el('#shippingLabel').textContent}`);
-  lines.push(`Descuento: ${el('#discount').textContent}`);
-  lines.push(`*Total: ${el('#total').textContent}*`);
-  lines.push('');
-  lines.push(`Nombre: ${name}`);
-  lines.push(`WhatsApp: ${phone}`);
-  lines.push(`Dirección: ${el('#buyerAddress').value}`);
-  lines.push(`Barrio: ${el('#buyerNeighborhood').value}`);
-  lines.push(`Ciudad: ${el('#buyerCity').value}`);
-  lines.push(`Entrega: ${delivery === 'envio' ? 'Envío' : 'Retira'}`);
-  lines.push(`Pago: ${pay}`);
-  const notes = el('#buyerNotes').value.trim();
-  if(notes) lines.push(`Notas: ${notes}`);
+    const lines = [];
+    lines.push('*Pedido Ixoye*');
+    lines.push('');
 
-  const text = encodeURIComponent(lines.join('\n'));
-  // poné tu número si querés direccionar a uno fijo:
-  const url = `https://wa.me/?text=${text}`;
-  window.open(url, '_blank');
+    CART.forEach((product, qty) => {
+        lines.push(`- ${product.title} x${qty} = $${fmt(product.price * qty)}`);
+    });
+
+    lines.push('');
+    lines.push(`Subtotal: ${el('#subtotal').textContent}`);
+    lines.push(`Envío: ${el('#shippingLabel').textContent}`);
+    lines.push(`Descuento: ${el('#discount').textContent}`);
+    lines.push(`*Total: ${el('#total').textContent}*`);
+    lines.push('');
+    lines.push(`Nombre: ${name}`);
+    lines.push(`WhatsApp: ${phone}`);
+
+    // Número fijo de la tienda (formato correcto para wa.me)
+    const storePhone = '5492235551421';
+
+    const msg = encodeURIComponent(lines.join('\n'));
+    const url = `https://wa.me/${storePhone}?text=${msg}`;
+    window.open(url, '_blank');
 }
+
 
 /* ===========================
    Init
