@@ -11,8 +11,16 @@ const SHIP_THRESHOLD = 5000;             // Envío gratis desde
 const SHIP_COST = 800;                   // Envío estándar
 
 /* Estado */
-const PRODUCTS = (window.PRODUCTS || []);
-const CART = new Map();
+let PRODUCTS = window.PRODUCTS || [];
+async function loadProducts(){
+  try {
+    const res = await fetch('products.json', { cache: 'no-store' });
+    if (!res.ok) throw new Error('No se pudo cargar products.json');
+    PRODUCTS = await res.json();
+  } catch (err) {
+    console.error(err);
+    PRODUCTS = [];
+  }
 
 /* ===========================
    Render de productos
