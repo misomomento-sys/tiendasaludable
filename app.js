@@ -121,12 +121,13 @@ function closeCart(){ $('#cartDrawer')?.classList.remove('open'); }
 /* ================================
    Render de productos
 ================================ */
-function renderProducts(){
+function renderProducts () {
   const grid = $('#productGrid');
   if (!grid) return;
+
   grid.innerHTML = '';
 
-  if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0){
+  if (!Array.isArray(PRODUCTS) || PRODUCTS.length === 0) {
     grid.innerHTML = '<p style="padding:16px">No hay productos para mostrar.</p>';
     return;
   }
@@ -144,18 +145,21 @@ function renderProducts(){
 
       <div class="price-row">
         <strong class="price">${fmt(p.price)}</strong>
-        <div class="qty" data-id="${p.id}">
-          <button class="qty-dec">-</button>
+        <div class="qty">
+          <button class="qty-dec" type="button">-</button>
           <input class="qty-input" type="number" min="1" value="1">
-          <button class="qty-inc">+</button>
+          <button class="qty-inc" type="button">+</button>
         </div>
       </div>
 
-      <button class="btn btn-add" data-id="${p.id}">Agregar</button>
+      <button class="btn btn-add" type="button" data-id="${p.id}">
+        Agregar
+      </button>
     `;
     grid.appendChild(card);
   });
 }
+
 /* ================================
    Eventos de la grilla (delegación)
 ================================ */
@@ -383,4 +387,39 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // (de acá para abajo tus listeners globales existentes)
 });
+/* =========================================
+   Listeners delegados para la grilla
+========================================= */
+function attachGridEvents () {
+  const grid = $('#productGrid');
+  if (!grid) return;
+
+  // Evitamos duplicar listeners si alguien llama de nuevo
+  if (grid._eventsBound) return;
+  grid._eventsBound = true;
+
+  grid.addEventListener('click', e => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+
+    const qtyInput = card.querySelector('.qty-input');
+
+    // + / -
+    if (e.target.classList.contains('qty-inc')) {
+      qtyInput.value = Number(qtyInput.value || 1) + 1;
+    }
+    if (e.target.classList.contains('qty-dec')) {
+      qtyInput.value = Math.max(1, Number(qtyInput.value || 1) - 1);
+    }
+
+    // Agregar
+    if (e.target.classList.contains('btn-add')) {
+      const id = e.target.dataset.id;
+      const qty = Number(qtyInput.value || 1);
+      addToCart(id, qty);
+      // TIP: si NO querés abrir el carrito automáticamente, no hagas nada acá
+      // openCart();  // <-- dejalo comentado para que no bloquee la vista
+    }
+  });
+}
 
