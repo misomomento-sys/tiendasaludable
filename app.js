@@ -47,27 +47,26 @@ function renderProducts() {
   PRODUCTS.forEach(p => {
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = `
-      <div class="img-wrap">
-        <img src="${p.image}" alt="${p.title}">
-      </div>
-      <h3 class="title">${p.title}</h3>
-      <p class="sku">SKU: ${p.sku}</p>
+   card.innerHTML = `
+  <div class="img-wrap">
+    <img src="assets/${p.image}" alt="${p.title}">
+  </div>
 
-      <div class="price-row">
-        <strong class="price">${fmt(p.price)}</strong>
+  <h3 class="title">${p.title}</h3>
+  <p class="sku">SKU: ${p.sku}</p>
 
-        <div class="qty">
-          <button class="qty-dec" type="button">-</button>
-          <input class="qty-input" type="number" min="1" value="1">
-          <button class="qty-inc" type="button">+</button>
-        </div>
-      </div>
+  <div class="price-row">
+    <strong class="price">$ ${fmt(p.price)}</strong>
+    <div class="qty">
+      <button class="qty-dec" data-id="${p.id}">-</button>
+      <input class="qty-input" type="number" min="1" value="1" data-id="${p.id}">
+      <button class="qty-inc" data-id="${p.id}">+</button>
+    </div>
+  </div>
 
-      <button class="btn btn-add" data-id="${p.id}" type="button">Agregar</button>
-    `;
-    grid.appendChild(card);
-  });
+  <button class="btn btn-add" data-id="${p.id}">Agregar</button>
+`;
+grid.appendChild(card);
 
   // Delegamos eventos de +/– y Agregar
   grid.addEventListener('click', e => {
