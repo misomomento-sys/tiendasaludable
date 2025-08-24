@@ -417,39 +417,4 @@ window.addEventListener('DOMContentLoaded', async () => {
   $('#payMethod')?.addEventListener('change', updateCart);
 });
 
-/* =========================================
-   Listeners delegados para la grilla
-========================================= */
-function attachGridEvents () {
-  const grid = $('#productGrid');
-  if (!grid) return;
-
-  // Evitamos duplicar listeners si alguien llama de nuevo
-  if (grid._eventsBound) return;
-  grid._eventsBound = true;
-
-  grid.addEventListener('click', e => {
-    const card = e.target.closest('.card');
-    if (!card) return;
-
-    const qtyInput = card.querySelector('.qty-input');
-
-    // + / -
-    if (e.target.classList.contains('qty-inc')) {
-      qtyInput.value = Number(qtyInput.value || 1) + 1;
-    }
-    if (e.target.classList.contains('qty-dec')) {
-      qtyInput.value = Math.max(1, Number(qtyInput.value || 1) - 1);
-    }
-
-    // Agregar
-    if (e.target.classList.contains('btn-add')) {
-      const id = e.target.dataset.id;
-      const qty = Number(qtyInput.value || 1);
-      addToCart(id, qty);
-      // TIP: si NO querés abrir el carrito automáticamente, no hagas nada acá
-      // openCart();  // <-- dejalo comentado para que no bloquee la vista
-    }
-  });
-}
 
