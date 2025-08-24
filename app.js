@@ -1,3 +1,5 @@
+// === Estado global ===
+let PRODUCTS = []; // <- muy importante que sea "let", no "const".
  /* ===========================
    Helpers
 =========================== */
