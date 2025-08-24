@@ -44,13 +44,34 @@ function renderProducts() {
     return;
   }
 
-  PRODUCTS.forEach(p => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <div class="img-wrap">
-        <img src="${p.image}" alt="${p.title}">
-      </div>
+ PRODUCTS.forEach(p => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="img-wrap">
+      <img src="${p.image}" alt="${p.title}">
+    </div>
+    <h3>${p.title}</h3>
+    <p>SKU: ${p.sku}</p>
+    <p class="price">$ ${fmt(p.price)}</p>
+    <div class="qty">
+      <button onclick="setQty('${p.sku}', -1)">-</button>
+      <input id="qty-${p.sku}" type="number" value="1" min="1">
+      <button onclick="setQty('${p.sku}', 1)">+</button>
+    </div>
+    <button class="btn btn-primary btn-add">Agregar</button>
+  `;
+
+  // ✅ CAMBIO ACÁ
+  $('.btn-add', card).onclick = () => {
+    addToCart(p.sku, +$('#qty-' + p.sku).value || 1);
+    flashAdded(p.title);   // aviso rápido
+    // openCart();  ❌ eliminado para que no bloquee
+  };
+
+  grid.appendChild(card);
+});
+
       <h3 class="title">${p.title}</h3>
       <p class="sku">SKU: ${p.sku}</p>
 
